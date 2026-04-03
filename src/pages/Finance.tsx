@@ -387,14 +387,18 @@ export default function Finance() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {tx.status === 'active' && (
+                        {tx.status === 'active' ? (
                           <button 
                             onClick={() => confirmReturn(tx.id)}
                             className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors border border-red-200"
                           >
                             Mark Returned
                           </button>
-                        )}
+                        ) : tx.status === 'returned' ? (
+                          <span className="text-stone-400 bg-stone-100 px-3 py-1 rounded-lg border border-stone-200 cursor-not-allowed">
+                            Returned
+                          </span>
+                        ) : null}
                       </td>
                     </tr>
                   ))
