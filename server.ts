@@ -22,7 +22,7 @@ app.use(express.json());
 let pool: mysql.Pool;
 
 async function setupDatabase() {
-  console.log(`[DB] Connecting to ${process.env.DB_HOST || 'localhost'}...`);
+  console.log(`[DB] Testing connection to ${process.env.DB_HOST || 'localhost'}...`);
   pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -30,7 +30,8 @@ async function setupDatabase() {
     database: process.env.DB_NAME || 'camprental',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 5000 // Force timeout quickly for Vercel stability
   });
 
   try {
@@ -38,30 +39,32 @@ async function setupDatabase() {
     await pool.query('SELECT 1');
     console.log('✅ [DB] MySQL Connection Established Successfully!');
   } catch (err: any) {
-    console.error('❌ [DB] Connection Failed:', err.message);
-    if (err.code === 'ER_BAD_DB_ERROR') {
-      console.log('💡 [DB] Tip: Please create the database "camprental" in your MySQL (Laragon).');
-    }
-    throw err;
+    console.error('❌ [DB] Skipping Database Setup: Database unreachable.', err.message);
+    return; // STOP HERE but don't crash
   }
 
-  // Table creation compatible with MySQL
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      role VARCHAR(50) NOT NULL
-    )
-  `);
+  try {
+    // ALL TABLE CREATION AND SEEDING GOES HERE
+    // (Previous logic continues safely within this try-catch...)
+    // Table creation compatible with MySQL
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL
+      )
+    `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS categories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
-    )
-  `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL
+      )
+    `);
+    
+    // ... all other pool.query calls follow here ...
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS items (
@@ -217,6 +220,9 @@ async function setupDatabase() {
     await pool.query("INSERT INTO item_statuses (name, color, description) VALUES ('Ada', 'emerald', 'Item tersedia dan siap untuk disewakan kepada pelanggan.')");
     await pool.query("INSERT INTO item_statuses (name, color, description) VALUES ('Menipis', 'orange', 'Item masih tersedia namun stok mulai menipis (biasanya di bawah 3).')");
     await pool.query("INSERT INTO item_statuses (name, color, description) VALUES ('Habis', 'red', 'Stok item habis sepenuhnya dan tidak tersedia untuk penyewaan.')");
+    }
+  } catch (err: any) {
+    console.warn('⚠️ [DB] Setup partially failed or table creation was skipped:', err.message);
   }
 }
 
