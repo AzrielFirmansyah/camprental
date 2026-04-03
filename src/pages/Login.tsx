@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchApi } from '../lib/api';
 import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
@@ -117,16 +117,7 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-10 pt-8 border-t border-stone-100 text-center">
-          <p className="text-sm text-stone-500">
-            Belum punya akun?{' '}
-            <Link to="/register" className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors ml-1">
-              Daftar Sekarang
-            </Link>
-          </p>
-        </div>
-
-        <div className="mt-8 text-center text-xs text-stone-400">
+        <div className="mt-10 pt-8 border-t border-stone-100 text-center text-xs text-stone-400">
           <p>Sewa Outdoor Sameton &bull; Created by Azriel</p>
         </div>
       </motion.div>
