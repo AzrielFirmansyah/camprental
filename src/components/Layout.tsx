@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import { fetchApi } from '../lib/api';
 
 export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +27,21 @@ export default function Layout() {
   const [submitting, setSubmitting] = useState(false);
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -70,19 +86,39 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-stone-100 font-sans text-stone-900">
-      {/* Sidebar */}
+      {/* Mobile Overlay */}
+      {isMobile && isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop & Mobile */}
       <motion.aside
-        initial={{ width: isSidebarOpen ? 256 : 0 }}
-        animate={{ width: isSidebarOpen ? 256 : 0 }}
-        className="bg-stone-900 text-stone-100 flex flex-col overflow-hidden"
+        initial={false}
+        animate={{ 
+          x: isMobile ? (isMobileSidebarOpen ? 0 : -256) : 0,
+          width: isSidebarOpen ? 256 : 0
+        }}
+        className={`bg-stone-900 text-stone-100 flex flex-col overflow-hidden fixed md:relative z-50 h-full
+          ${isMobile ? 'shadow-2xl' : ''}`}
       >
-        <div className="p-6 flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-emerald-400 whitespace-nowrap">
-            Sewa Outdoor Sameton
+        <div className="p-4 md:p-6 flex items-center justify-between">
+          <h1 className="text-lg md:text-xl font-bold tracking-tight text-emerald-400 whitespace-nowrap">
+            Sameton
           </h1>
+          {isMobile && (
+            <button 
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="p-2 rounded-lg hover:bg-stone-800 text-stone-400"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4">
+        <nav className="flex-1 px-3 md:px-4 space-y-2 mt-2 md:mt-4 overflow-y-auto">
           {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -90,13 +126,15 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
-                  }`}
+                onClick={() => isMobile && setIsMobileSidebarOpen(false)}
+                className={`flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-colors ${
+                  isActive
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
+                }`}
               >
                 <Icon size={20} />
-                <span className="font-medium whitespace-nowrap">{item.label}</span>
+                <span className="font-medium whitespace-nowrap text-sm md:text-base">{item.label}</span>
               </Link>
             );
           })}
@@ -104,13 +142,13 @@ export default function Layout() {
       </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-stone-200 h-16 flex items-center justify-between px-6">
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header className="bg-white border-b border-stone-200 h-14 md:h-16 flex items-center justify-between px-3 md:px-6">
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            onClick={() => isMobile ? setIsMobileSidebarOpen(true) : setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 rounded-lg hover:bg-stone-100 text-stone-600 transition-colors"
           >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            {isSidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           {/* User Menu */}
@@ -120,12 +158,12 @@ export default function Layout() {
                 e.stopPropagation();
                 setIsUserMenuOpen(!isUserMenuOpen);
               }}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-stone-100 transition-all group active:scale-95"
+              className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-stone-100 transition-all group active:scale-95"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-sm font-bold text-white shadow-sm">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs md:text-sm font-bold text-white shadow-sm">
                 {user?.name?.charAt(0)}
               </div>
-              <div className="flex flex-col items-start">
+              <div className="hidden sm:flex flex-col items-start">
                 <span className="text-sm font-semibold text-stone-800 leading-tight">{user?.name}</span>
                 <span className="text-xs text-stone-400 capitalize leading-tight">{user?.role}</span>
               </div>
@@ -172,7 +210,7 @@ export default function Layout() {
             </AnimatePresence>
           </div>
         </header>
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 md:p-6">
           <Outlet />
         </div>
       </main>
