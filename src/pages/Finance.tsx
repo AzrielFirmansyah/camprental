@@ -395,8 +395,8 @@ export default function Finance() {
                             Mark Returned
                           </button>
                         ) : tx.status === 'returned' ? (
-                          <span className="text-stone-400 bg-stone-100 px-3 py-1 rounded-lg border border-stone-200 cursor-not-allowed">
-                            Returned
+                          <span className="text-red-400 bg-red-50 px-3 py-1 rounded-lg border border-red-200 cursor-not-allowed opacity-60">
+                            Mark Returned
                           </span>
                         ) : null}
                       </td>
