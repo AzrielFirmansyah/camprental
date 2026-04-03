@@ -30,14 +30,16 @@ async function setupDatabase() {
   let dbName = process.env.DB_NAME || 'camprental';
 
   // Railway MySQL environment variables
-  if (process.env.MYSQL_URL) {
+  if (process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL) {
     try {
-      const url = new URL(process.env.MYSQL_URL);
+      const mysqlUrl = process.env.MYSQL_PUBLIC_URL || process.env.MYSQL_URL || '';
+      const url = new URL(mysqlUrl);
       dbHost = url.hostname;
       dbPort = parseInt(url.port) || 3306;
       dbUser = url.username;
       dbPass = url.password;
       dbName = url.pathname.replace('/', '') || 'railway';
+      console.log(`[DB] Using Railway MySQL (${dbHost}:${dbPort}/${dbName})`);
     } catch (e) {
       console.log('[DB] Failed to parse MYSQL_URL, using default config');
     }
