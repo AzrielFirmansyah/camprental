@@ -21,16 +21,24 @@ app.use(express.json());
 let pool: mysql.Pool;
 
 async function setupDatabase() {
-  console.log(`[DB] Testing connection to ${process.env.DB_HOST || 'localhost'}...`);
+  const dbHost = process.env.DB_HOST || 'localhost';
+  const dbPort = parseInt(process.env.DB_PORT || '3306');
+  const dbUser = process.env.DB_USER || 'root';
+  const dbPass = process.env.DB_PASSWORD || '';
+  const dbName = process.env.DB_NAME || 'camprental';
+
+  console.log(`[DB] Connecting to ${dbHost}:${dbPort} / ${dbName}...`);
   pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'camprental',
+    host: dbHost,
+    port: dbPort,
+    user: dbUser,
+    password: dbPass,
+    database: dbName,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 5000 // Force timeout quickly for Vercel stability
+    connectTimeout: 10000,
+    ssl: dbHost !== 'localhost' ? { rejectUnauthorized: false } : undefined,
   });
 
   try {
