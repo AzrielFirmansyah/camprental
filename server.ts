@@ -277,6 +277,33 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  console.log(`[REGISTER] Attempt: ${email}`);
+  try {
+    // Check if user already exists
+    const [existing]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Email sudah terdaftar. Silakan login.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result]: any = await pool.query(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, 'staff'] // Default role for registration is staff
+    );
+
+    const newUser = { id: result.insertId, name, email, role: 'staff' };
+    const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '24h' });
+
+    console.log(`[REGISTER] Success: ${email}`);
+    res.json({ token, user: newUser });
+  } catch (err: any) {
+    console.error(`[REGISTER] Fatal Error:`, err.message);
+    res.status(500).json({ error: 'Server error during registration' });
+  }
+});
+
 app.get('/api/auth/me', authenticateToken, (req: any, res) => {
   res.json({ user: req.user });
 });

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchApi } from '../lib/api';
-import { Tent, Lock, Mail } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -33,56 +33,61 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-4 font-['Plus_Jakarta_Sans',sans-serif]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-stone-200"
+        className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2rem] border border-stone-200 shadow-[0_10px_35px_-12px_rgba(0,0,0,0.1)]"
       >
-        <div className="flex flex-col items-center mb-8">
-          <div className="mb-4">
-            <img src="/logo.png" alt="Sameton Outdoor Logo" className="h-28 w-auto object-contain mix-blend-multiply" />
+        <div className="text-center mb-10">
+          <div className="inline-block p-3 bg-emerald-50 rounded-2xl mb-4">
+            <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-900">Sewa Outdoor Sameton</h1>
-          <p className="text-stone-500 text-sm mt-1">Sign in to manage your outdoor gear</p>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Selamat Datang Kembali</h1>
+          <p className="text-stone-500 mt-1">Lanjutkan pengelolaan bisnis rental Anda</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 border border-red-100">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm mb-6 flex items-center gap-2"
+          >
+            <div className="w-1 h-1 rounded-full bg-red-500"></div>
             {error}
-          </div>
+          </motion.div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail size={18} className="text-stone-400" />
+            <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 ml-1">Alamat Email</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-emerald-500 transition-colors">
+                <Mail size={18} />
               </div>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-stone-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-stone-50 transition-colors"
+                className="block w-full pl-11 pr-4 py-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder-stone-400 outline-none transition-all text-sm"
                 placeholder="admin@rental.com"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Password</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock size={18} className="text-stone-400" />
+            <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 ml-1">Password</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-emerald-500 transition-colors">
+                <Lock size={18} />
               </div>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-stone-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-stone-50 transition-colors"
+                className="block w-full pl-11 pr-4 py-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder-stone-400 outline-none transition-all text-sm"
                 placeholder="••••••••"
               />
             </div>
@@ -91,14 +96,30 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50"
+            className="w-full mt-6 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/10 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>
+                Login
+                <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+              </>
+            )}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-stone-500">
-          <p>Created by Azriel</p>
+        <div className="mt-10 pt-8 border-t border-stone-100 text-center">
+          <p className="text-sm text-stone-500">
+            Belum punya akun?{' '}
+            <Link to="/register" className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors ml-1">
+              Daftar Sekarang
+            </Link>
+          </p>
+        </div>
+
+        <div className="mt-8 text-center text-xs text-stone-400">
+          <p>Sewa Outdoor Sameton &bull; Created by Azriel</p>
         </div>
       </motion.div>
     </div>
