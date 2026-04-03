@@ -22,6 +22,7 @@ app.use(express.json());
 let pool: mysql.Pool;
 
 async function setupDatabase() {
+  console.log(`[DB] Connecting to ${process.env.DB_HOST || 'localhost'}...`);
   pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -31,6 +32,18 @@ async function setupDatabase() {
     connectionLimit: 10,
     queueLimit: 0
   });
+
+  try {
+    // Basic connectivity test
+    await pool.query('SELECT 1');
+    console.log('✅ [DB] MySQL Connection Established Successfully!');
+  } catch (err: any) {
+    console.error('❌ [DB] Connection Failed:', err.message);
+    if (err.code === 'ER_BAD_DB_ERROR') {
+      console.log('💡 [DB] Tip: Please create the database "camprental" in your MySQL (Laragon).');
+    }
+    throw err;
+  }
 
   // Table creation compatible with MySQL
   await pool.query(`
@@ -237,15 +250,24 @@ const requireAdmin = (req: any, res: any, next: any) => {
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`[LOGIN] Attempt: ${email}`);
   try {
     const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
-    if (!user) return res.status(400).json({ error: 'User not found' });
+    if (!user) {
+      console.warn(`[LOGIN] Not Found: ${email}`);
+      return res.status(400).json({ error: 'User not found' });
+    }
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
+    if (!validPassword) {
+      console.warn(`[LOGIN] Invalid Password: ${email}`);
+      return res.status(400).json({ error: 'Invalid password' });
+    }
+    console.log(`[LOGIN] Success: ${email} (${user.role})`);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-  } catch (err) {
+  } catch (err: any) {
+    console.error(`[LOGIN] Fatal Error:`, err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
