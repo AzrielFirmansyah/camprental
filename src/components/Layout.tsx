@@ -31,11 +31,14 @@ export default function Layout() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
         setIsSidebarOpen(false);
+        setIsMobileSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
+        setIsMobileSidebarOpen(false);
       }
     };
     checkMobile();
@@ -98,11 +101,13 @@ export default function Layout() {
       <motion.aside
         initial={false}
         animate={{ 
-          x: isMobile ? (isMobileSidebarOpen ? 0 : -256) : 0,
-          width: isSidebarOpen ? 256 : 0
+          x: isMobile ? (isMobileSidebarOpen ? 0 : -280) : 0,
+          width: isSidebarOpen ? 256 : 0,
+          opacity: isMobile ? (isMobileSidebarOpen ? 1 : 0) : (isSidebarOpen ? 1 : 0)
         }}
+        transition={{ duration: 0.2 }}
         className={`bg-stone-900 text-stone-100 flex flex-col overflow-hidden fixed md:relative z-50 h-full
-          ${isMobile ? 'shadow-2xl' : ''}`}
+          ${isMobile ? 'shadow-2xl w-64' : ''}`}
       >
         <div className="p-4 md:p-6 flex items-center justify-between">
           <h1 className="text-lg md:text-xl font-bold tracking-tight text-emerald-400 whitespace-nowrap">
@@ -126,8 +131,10 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => isMobile && setIsMobileSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-colors ${
+                onClick={() => {
+                  if (isMobile) setIsMobileSidebarOpen(false);
+                }}
+                className={`flex items-center gap-3 px-3 md:px-4 py-3 md:py-3 rounded-xl transition-colors ${
                   isActive
                     ? 'bg-emerald-600 text-white'
                     : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
@@ -140,6 +147,16 @@ export default function Layout() {
           })}
         </nav>
       </motion.aside>
+
+      {/* Mobile Toggle Button - visible when sidebar is closed */}
+      {isMobile && !isMobileSidebarOpen && (
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="fixed bottom-4 left-4 z-30 bg-emerald-600 text-white p-3 rounded-full shadow-lg hover:bg-emerald-700 transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
