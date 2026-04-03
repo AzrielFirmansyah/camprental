@@ -17,6 +17,7 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [submitting, setSubmitting] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -67,23 +68,32 @@ export default function Inventory() {
 
   const executeSubmit = async () => {
     setConfirmModalOpen(false);
+    setSubmitting(true);
     try {
+      const payload = {
+        ...formData,
+        categoryId: parseInt(formData.categoryId) || null
+      };
       if (editingItem) {
         await fetchApi(`/items/${editingItem.id}`, {
           method: 'PUT',
-          body: JSON.stringify(formData)
+          body: JSON.stringify(payload)
         });
       } else {
         await fetchApi('/items', {
           method: 'POST',
-          body: JSON.stringify(formData)
+          body: JSON.stringify(payload)
         });
       }
       setIsModalOpen(false);
+      setEditingItem(null);
+      setFormData({ name: '', categoryId: '', dailyPrice: '', weeklyPrice: '', totalStock: '' });
       loadData();
     } catch (error: any) {
       console.error('Failed to save item', error);
-      alert(error.message || 'Failed to save item');
+      alert(error.message || 'Failed to save item. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -94,6 +104,7 @@ export default function Inventory() {
 
   const executeDelete = async () => {
     if (itemToDelete === null) return;
+    setLoading(true);
     try {
       await fetchApi(`/items/${itemToDelete}`, { method: 'DELETE' });
       setDeleteModalOpen(false);
@@ -103,6 +114,8 @@ export default function Inventory() {
       console.error('Failed to delete item', error);
       const msg = error.message || 'Failed to delete item. It may be in use in a transaction.';
       alert(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,17 +123,17 @@ export default function Inventory() {
     if (item) {
       setEditingItem(item);
       setFormData({
-        name: item.name,
-        categoryId: item.categoryId,
-        dailyPrice: item.dailyPrice,
-        weeklyPrice: item.weeklyPrice,
-        totalStock: item.totalStock
+        name: item.name || '',
+        categoryId: item.categoryId?.toString() || '',
+        dailyPrice: item.dailyPrice?.toString() || '',
+        weeklyPrice: item.weeklyPrice?.toString() || '',
+        totalStock: item.totalStock?.toString() || ''
       });
     } else {
       setEditingItem(null);
       setFormData({
         name: '',
-        categoryId: categories[0]?.id || '',
+        categoryId: categories[0]?.id?.toString() || '',
         dailyPrice: '',
         weeklyPrice: '',
         totalStock: ''
@@ -401,8 +414,8 @@ export default function Inventory() {
                   </div>
                 </div>
                 <div className="bg-stone-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button type="submit" className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Save
+                  <button type="submit" disabled={submitting} className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                    {submitting ? 'Saving...' : 'Save'}
                   </button>
                   <button type="button" onClick={() => setIsModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-xl border border-stone-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                     Cancel
@@ -441,10 +454,11 @@ export default function Inventory() {
               <div className="bg-stone-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={executeDelete}
-                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                 >
-                  Delete
+                  {submitting ? 'Deleting...' : 'Delete'}
                 </button>
                 <button
                   type="button"
