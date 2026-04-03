@@ -42,7 +42,9 @@ export default function Login() {
       >
         <div className="text-center mb-10">
           <div className="inline-block p-3 bg-emerald-50 rounded-2xl mb-4">
-            <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            <div className="w-10 h-10 flex items-center justify-center bg-emerald-600 rounded-xl text-white font-bold text-lg">
+              S
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Selamat Datang Kembali</h1>
           <p className="text-stone-500 mt-1">Lanjutkan pengelolaan bisnis rental Anda</p>
