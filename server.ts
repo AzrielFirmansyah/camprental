@@ -1,7 +1,6 @@
-// Deployment Sync: Clean build trigger for Vercel V2
 import express from 'express';
 import cors from 'cors';
-import { createServer as createViteServer } from 'vite';
+// createViteServer removed from static imports for Vercel stability
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
@@ -790,7 +789,8 @@ app.put('/api/auth/change-password', authenticateToken, async (req: any, res: an
 async function startServer() {
   await setupDatabase();
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
+    const { createServer } = await import('vite');
+    const vite = await createServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
