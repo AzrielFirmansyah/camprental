@@ -17,7 +17,7 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (password !== confirmPassword) {
       setError('Password tidak cocok');
       return;
@@ -47,7 +47,7 @@ export default function Register() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 p-4 font-['Plus_Jakarta_Sans',sans-serif]">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="bg-white p-10 rounded-[2rem] border border-stone-200 shadow-2xl flex flex-col items-center max-w-sm w-full text-center"
@@ -78,7 +78,7 @@ export default function Register() {
         </div>
 
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm mb-6 flex items-center gap-2"
@@ -101,7 +101,7 @@ export default function Register() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="block w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder-stone-400 outline-none transition-all text-sm"
-                placeholder="Azriel Firmansyah"
+                placeholder="Masukkan Nama"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="block w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder-stone-400 outline-none transition-all text-sm"
-                placeholder="azriel@example.com"
+                placeholder="Masukkan Email"
               />
             </div>
           </div>

@@ -279,28 +279,42 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
-  console.log(`[REGISTER] Attempt: ${email}`);
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Semua data harus diisi.' });
+  }
+
+  console.log(`[REGISTER] Processing: ${email}`);
   try {
+    // Check connection first
+    if (!pool) {
+      throw new Error('Database connection not established');
+    }
+
     // Check if user already exists
     const [existing]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
-      return res.status(400).json({ error: 'Email sudah terdaftar. Silakan login.' });
+      return res.status(400).json({ error: 'Email sudah terdaftar. Silakan gunakan email lain atau login.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result]: any = await pool.query(
       'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, 'staff'] // Default role for registration is staff
+      [name, email, hashedPassword, 'staff']
     );
 
-    const newUser = { id: result.insertId, name, email, role: 'staff' };
-    const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '24h' });
+    const userId = result.insertId;
+    const userPayload = { id: userId, email, role: 'staff', name };
+    const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '24h' });
 
-    console.log(`[REGISTER] Success: ${email}`);
-    res.json({ token, user: newUser });
+    console.log(`[REGISTER] Success for User ID: ${userId}`);
+    res.status(201).json({ 
+      token, 
+      user: userPayload,
+      message: 'Registrasi Berhasil'
+    });
   } catch (err: any) {
-    console.error(`[REGISTER] Fatal Error:`, err.message);
-    res.status(500).json({ error: 'Server error during registration' });
+    console.error(`[REGISTER] Fatal Error:`, err);
+    res.status(500).json({ error: 'Gagal melakukan registrasi: ' + (err.message || 'Server error') });
   }
 });
 
