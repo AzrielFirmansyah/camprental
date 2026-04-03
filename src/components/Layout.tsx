@@ -178,49 +178,51 @@ export default function Layout() {
             {isMobile ? <Menu size={24} /> : (isSidebarOpen ? <X size={20} /> : <Menu size={20} />)}
           </button>
 
-          {/* User Menu */}
-          <div className="relative z-50">
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsUserMenuOpen(!isUserMenuOpen); }}
-              className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-stone-100 transition-all"
-            >
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs md:text-sm font-bold text-white">
-                {user?.name?.charAt(0)}
-              </div>
-              <div className="hidden sm:flex flex-col items-start">
-                <span className="text-sm font-semibold text-stone-800">{user?.name}</span>
-                <span className="text-xs text-stone-400 capitalize">{user?.role}</span>
-              </div>
-              <ChevronDown size={16} className={`text-stone-400 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
+          {/* User Menu - Hide on mobile when sidebar is open */}
+          {!isMobile && (
+            <div className="relative z-50">
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsUserMenuOpen(!isUserMenuOpen); }}
+                className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-stone-100 transition-all"
+              >
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs md:text-sm font-bold text-white">
+                  {user?.name?.charAt(0)}
+                </div>
+                <div className="hidden sm:flex flex-col items-start">
+                  <span className="text-sm font-semibold text-stone-800">{user?.name}</span>
+                  <span className="text-xs text-stone-400 capitalize">{user?.role}</span>
+                </div>
+                <ChevronDown size={16} className={`text-stone-400 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            <AnimatePresence>
-              {isUserMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50"
-                  >
-                    <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
-                      <p className="text-xs text-stone-500">Logged in as</p>
-                      <p className="text-sm font-semibold text-stone-800 truncate">{user?.email}</p>
-                    </div>
-                    <div className="py-1">
-                      <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-600 hover:bg-stone-50">
-                        <Key size={16} /> <span>Change Password</span>
-                      </button>
-                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-stone-100">
-                        <LogOut size={16} /> <span>Logout</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50"
+                    >
+                      <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
+                        <p className="text-xs text-stone-500">Logged in as</p>
+                        <p className="text-sm font-semibold text-stone-800 truncate">{user?.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-600 hover:bg-stone-50">
+                          <Key size={16} /> <span>Change Password</span>
+                        </button>
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-stone-100">
+                          <LogOut size={16} /> <span>Logout</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </header>
 
         <div className="flex-1 overflow-auto p-3 md:p-6">
