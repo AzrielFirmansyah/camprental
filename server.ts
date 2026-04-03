@@ -23,10 +23,10 @@ let pool: mysql.Pool;
 
 async function setupDatabase() {
   pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '', // Default Laragon password is empty
-    database: 'camprental',
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'camprental',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
