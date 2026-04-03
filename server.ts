@@ -21,11 +21,27 @@ app.use(express.json());
 let pool: mysql.Pool;
 
 async function setupDatabase() {
-  const dbHost = process.env.DB_HOST || 'localhost';
-  const dbPort = parseInt(process.env.DB_PORT || '3306');
-  const dbUser = process.env.DB_USER || 'root';
-  const dbPass = process.env.DB_PASSWORD || '';
-  const dbName = process.env.DB_NAME || 'camprental';
+  const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  
+  let dbHost = process.env.DB_HOST || 'localhost';
+  let dbPort = parseInt(process.env.DB_PORT || '3306');
+  let dbUser = process.env.DB_USER || 'root';
+  let dbPass = process.env.DB_PASSWORD || '';
+  let dbName = process.env.DB_NAME || 'camprental';
+
+  // Railway MySQL environment variables
+  if (process.env.MYSQL_URL) {
+    try {
+      const url = new URL(process.env.MYSQL_URL);
+      dbHost = url.hostname;
+      dbPort = parseInt(url.port) || 3306;
+      dbUser = url.username;
+      dbPass = url.password;
+      dbName = url.pathname.replace('/', '') || 'railway';
+    } catch (e) {
+      console.log('[DB] Failed to parse MYSQL_URL, using default config');
+    }
+  }
 
   console.log(`[DB] Connecting to ${dbHost}:${dbPort} / ${dbName}...`);
   pool = mysql.createPool({
