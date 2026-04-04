@@ -495,20 +495,26 @@ export default function Finance() {
                   </div>
                 </div>
                 <div className="bg-stone-50 rounded-2xl border border-stone-200 max-h-64 overflow-y-auto mb-6">
-                  <table className="min-w-full divide-y divide-stone-200">
-                    <thead className="bg-stone-100 sticky top-0">
-                      <tr><th className="px-4 py-2 text-left text-xs font-bold text-stone-500">Barang</th><th className="px-4 py-2 text-center text-xs font-bold text-stone-500">Qty</th><th className="px-4 py-2 text-right text-xs font-bold text-stone-500">Subtotal</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-200">
-                      {viewData.items?.map((item: any) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-2 text-sm text-stone-800">{item.name}</td>
-                          <td className="px-4 py-2 text-sm text-stone-600 text-center">{item.quantity}</td>
-                          <td className="px-4 py-2 text-sm font-medium text-stone-800 text-right">{formatCurrency(item.price)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {viewData.items && viewData.items.length > 0 ? (
+                    <table className="min-w-full divide-y divide-stone-200">
+                      <thead className="bg-stone-100 sticky top-0">
+                        <tr><th className="px-4 py-2 text-left text-xs font-bold text-stone-500">Barang</th><th className="px-4 py-2 text-center text-xs font-bold text-stone-500">Qty</th><th className="px-4 py-2 text-right text-xs font-bold text-stone-500">Subtotal</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-200">
+                        {viewData.items.map((item: any) => (
+                          <tr key={item.id}>
+                            <td className="px-4 py-2 text-sm text-stone-800">{item.itemName || item.name || '-'}</td>
+                            <td className="px-4 py-2 text-sm text-stone-600 text-center">{item.quantity}</td>
+                            <td className="px-4 py-2 text-sm font-medium text-stone-800 text-right">{formatCurrency(item.price)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="p-8 text-center text-stone-400">
+                      <p className="text-sm">Tidak ada data barang</p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between text-sm border-t border-stone-200 pt-4">
                   <div><span className="text-stone-500">Subtotal:</span> <span className="font-medium ml-2">{formatCurrency(viewData.subtotal)}</span></div>
