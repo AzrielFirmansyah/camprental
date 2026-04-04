@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchApi } from '../lib/api';
-import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeOff, UserPlus } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,7 +10,41 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState('');
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setRegisterLoading(true);
+
+    try {
+      await fetchApi('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          password,
+          role: 'admin'
+        }),
+      });
+      setRegisterSuccess(true);
+      setTimeout(() => {
+        setIsRegister(false);
+        setRegisterSuccess(false);
+        setEmail('');
+        setPassword('');
+        setName('');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +78,12 @@ export default function Login() {
           <div className="mb-4">
             <img src="/logo.png" alt="Logo" className="w-20 h-20 mx-auto object-contain rounded-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Selamat Datang Kembali</h1>
-          <p className="text-stone-500 mt-1">Lanjutkan pengelolaan bisnis rental Anda</p>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">
+            {isRegister ? 'Daftar Akun Baru' : 'Selamat Datang Kembali'}
+          </h1>
+          <p className="text-stone-500 mt-1">
+            {isRegister ? 'Buat akun untuk mulai mengelola bisnis rental' : 'Lanjutkan pengelolaan bisnis rental Anda'}
+          </p>
         </div>
 
         {error && (
@@ -59,7 +97,36 @@ export default function Login() {
           </motion.div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        {registerSuccess && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-xl text-sm mb-6 flex items-center gap-2"
+          >
+            <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
+            Registrasi berhasil! Silakan login.
+          </motion.div>
+        )}
+
+        <form onSubmit={isRegister ? handleRegister : handleLogin} className="space-y-5">
+          {isRegister && (
+            <div>
+              <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 ml-1">Nama Lengkap</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-emerald-500 transition-colors">
+                  <UserPlus size={18} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="block w-full pl-11 pr-4 py-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder-stone-400 outline-none transition-all text-sm"
+                  placeholder="Nama Anda"
+                />
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 ml-1">Alamat Email</label>
             <div className="relative group">
@@ -103,21 +170,39 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || registerLoading}
             className="w-full mt-6 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/10 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? (
+            {(loading || registerLoading) ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
               <>
-                Login
+                {isRegister ? 'Daftar Sekarang' : 'Login'}
                 <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </>
             )}
           </button>
         </form>
 
-        <div className="mt-10 pt-8 border-t border-stone-100 text-center text-xs text-stone-400">
+        <div className="mt-6 text-center">
+          {isRegister ? (
+            <button 
+              onClick={() => { setIsRegister(false); setError(''); }}
+              className="text-sm text-stone-500 hover:text-stone-700"
+            >
+              Sudah punya akun? <span className="text-emerald-600 font-semibold">Login</span>
+            </button>
+          ) : (
+            <button 
+              onClick={() => { setIsRegister(true); setError(''); }}
+              className="text-sm text-stone-500 hover:text-stone-700"
+            >
+              Belum punya akun? <span className="text-emerald-600 font-semibold">Daftar</span>
+            </button>
+          )}
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-stone-100 text-center text-xs text-stone-400">
           <p>Sewa Outdoor Sameton &bull; Created by Azriel</p>
         </div>
       </motion.div>

@@ -92,9 +92,20 @@ async function setupDatabase() {
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL
       )
-    `);
+  `);
 
-    await pool.query(`
+  // Ensure foreign keys have CASCADE delete - recreate if needed
+  try {
+    await pool.query('ALTER TABLE transaction_items DROP FOREIGN KEY IF EXISTS transaction_items_ibfk_1');
+    await pool.query('ALTER TABLE transaction_items DROP FOREIGN KEY IF EXISTS transaction_items_ibfk_2');
+    await pool.query('ALTER TABLE transaction_items ADD CONSTRAINT transaction_items_ibfk_1 FOREIGN KEY (transactionId) REFERENCES transactions(id) ON DELETE CASCADE');
+    await pool.query('ALTER TABLE transaction_items ADD CONSTRAINT transaction_items_ibfk_2 FOREIGN KEY (itemId) REFERENCES items(id) ON DELETE CASCADE');
+    console.log('[DB] Foreign keys updated with CASCADE');
+  } catch (fkErr: any) {
+    console.log('[DB] Foreign key update skipped:', fkErr.message);
+  }
+
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL
@@ -174,8 +185,8 @@ async function setupDatabase() {
       itemId INT,
       quantity INT NOT NULL,
       price DECIMAL(15,2) NOT NULL,
-      FOREIGN KEY (transactionId) REFERENCES transactions(id),
-      FOREIGN KEY (itemId) REFERENCES items(id)
+      FOREIGN KEY (transactionId) REFERENCES transactions(id) ON DELETE CASCADE,
+      FOREIGN KEY (itemId) REFERENCES items(id) ON DELETE CASCADE
     )
   `);
 
@@ -283,11 +294,12 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
 const requireAdmin = (req: any, res: any, next: any) => {
   const role = (req.user.role || '').toLowerCase();
-  console.log(`[ACL] Verifying role: ${role}`);
+  console.log(`[ACL] Verifying role: ${role}, user: ${req.user.email}`);
   if (role !== 'admin' && role !== 'owner') {
     console.warn(`[ACL] Access Denied for role: ${role}`);
-    return res.status(403).json({ error: 'Akses Ditolak: Hanya Admin atau Owner yang diizinkan.' });
+    return res.status(403).json({ error: 'Akses ditolak: Hanya Admin atau Owner yang diizinkan.' });
   }
+  console.log(`[ACL] Access Granted for role: ${role}`);
   next();
 };
 
@@ -445,11 +457,12 @@ app.put('/api/categories/:id', authenticateToken, requireAdmin, async (req, res)
 app.delete('/api/categories/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const [rows]: any = await pool.query('SELECT COUNT(*) as count FROM items WHERE categoryId = ?', [req.params.id]);
-    if (rows[0].count > 0) return res.status(400).json({ error: 'Batal dihapus: masih ada item yang menggunakan kategori ditandai.' });
+    if (rows[0].count > 0) return res.status(400).json({ error: 'Batal dihapus: masih ada item yang menggunakan kategori ini.' });
     await pool.query('DELETE FROM categories WHERE id = ?', [req.params.id]);
     res.json({ message: 'Category deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err: any) {
+    console.error('[DELETE] Category Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 
@@ -482,8 +495,9 @@ app.delete('/api/item_statuses/:id', authenticateToken, requireAdmin, async (req
   try {
     await pool.query('DELETE FROM item_statuses WHERE id = ?', [req.params.id]);
     res.json({ message: 'Status deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err: any) {
+    console.error('[DELETE] Item Status Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 
@@ -521,8 +535,9 @@ app.delete('/api/discounts/:id', authenticateToken, requireAdmin, async (req, re
   try {
     await pool.query('DELETE FROM discounts WHERE id = ?', [req.params.id]);
     res.json({ message: 'Discount deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err: any) {
+    console.error('[DELETE] Discount Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 
@@ -607,8 +622,9 @@ app.delete('/api/payment_methods/:id', authenticateToken, requireAdmin, async (r
   try {
     await pool.query('DELETE FROM payment_methods WHERE id = ?', [req.params.id]);
     res.json({ message: 'Payment method deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err: any) {
+    console.error('[DELETE] Payment Method Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 
@@ -647,7 +663,8 @@ app.delete('/api/item_statuses/:id', authenticateToken, requireAdmin, async (req
     await pool.query('DELETE FROM item_statuses WHERE id = ?', [req.params.id]);
     res.json({ message: 'Item status deleted' });
   } catch (err: any) {
-    res.status(500).json({ error: 'Server error: ' + err.message });
+    console.error('[DELETE] Item Status Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 
@@ -667,7 +684,7 @@ app.delete('/api/items/:id', authenticateToken, requireAdmin, async (req, res) =
       });
     }
 
-    // Phase 2: Execute deletion
+    // Phase 2: Execute deletion with CASCADE to handle any remaining references
     console.log(`[DEBUG] Executing SQL DELETE for Item ID: ${itemId}`);
     const [result]: any = await pool.query('DELETE FROM items WHERE id = ?', [itemId]);
     
@@ -680,6 +697,7 @@ app.delete('/api/items/:id', authenticateToken, requireAdmin, async (req, res) =
     res.json({ message: 'Barang berhasil dihapus' });
   } catch (err: any) {
     console.error(`[FATAL ERROR] Failed to delete Item ${itemId}:`, err);
+    console.error(`[ERROR DETAIL] Code: ${err.code}, Message: ${err.message}`);
     
     // Check for explicit MySQL foreign key error if Phase 1 somehow missed it
     if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
@@ -867,8 +885,9 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   try {
     await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
     res.json({ message: 'User deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err: any) {
+    console.error('[DELETE] User Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
   }
 });
 

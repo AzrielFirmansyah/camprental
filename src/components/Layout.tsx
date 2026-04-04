@@ -138,11 +138,16 @@ export default function Layout() {
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="fixed left-0 top-0 h-full w-64 bg-stone-900 text-stone-100 z-50 shadow-2xl"
         >
-          <div className="p-5 flex items-center justify-between border-b border-stone-800">
-            <h1 className="text-lg font-bold text-emerald-400">Sameton</h1>
-            <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-stone-800 rounded-lg">
-              <X size={20} />
-            </button>
+          <div className="p-5 pt-5 border-b border-stone-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-base font-bold text-white leading-tight">Sewa Outdoor</h1>
+                <p className="text-sm font-medium text-emerald-400">Sameton</p>
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-stone-800 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
           </div>
           <nav className="p-3 space-y-1">
             {filteredNavItems.map((item) => {
@@ -188,8 +193,12 @@ export default function Layout() {
           animate={{ width: 256, opacity: 1 }}
           className="bg-stone-900 text-stone-100 flex flex-col"
         >
-          <div className="p-6">
-            <h1 className="text-xl font-bold tracking-tight text-emerald-400">Sewa Outdoor Sameton</h1>
+          <div className="p-5 pt-6">
+            <div className="mb-2">
+              <h1 className="text-lg font-bold tracking-tight text-white leading-tight">Sewa Outdoor</h1>
+              <p className="text-sm font-medium text-emerald-400">Sameton</p>
+            </div>
+            <div className="h-px bg-gradient-to-r from-emerald-500/60 to-transparent mt-3"></div>
           </div>
           <nav className="flex-1 px-4 space-y-2 mt-2">
             {filteredNavItems.map((item) => {
