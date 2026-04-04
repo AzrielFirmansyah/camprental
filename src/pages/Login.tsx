@@ -41,8 +41,8 @@ export default function Login() {
         className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2rem] border border-stone-200 shadow-[0_10px_35px_-12px_rgba(0,0,0,0.1)]"
       >
         <div className="text-center mb-10">
-          <div className="inline-block p-2 bg-emerald-50 rounded-2xl mb-4">
-            <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
+          <div className="mb-4">
+            <img src="/logo.png" alt="Logo" className="w-20 h-20 mx-auto object-contain rounded-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Selamat Datang Kembali</h1>
           <p className="text-stone-500 mt-1">Lanjutkan pengelolaan bisnis rental Anda</p>
