@@ -7,8 +7,10 @@ import {
   ShoppingCart, 
   Package,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Calendar
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { 
   BarChart,
   Bar,
@@ -17,20 +19,34 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Legend,
-  Cell,
   ReferenceLine
 } from 'recharts';
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const result = await fetchApi('/dashboard');
-        setData(result);
+        const [dashboardRes, txRes, expRes] = await Promise.all([
+          fetchApi('/dashboard'),
+          fetchApi('/transactions'),
+          fetchApi('/finance/expenses')
+        ]);
+        setData(dashboardRes);
+        setTransactions(txRes || []);
+        setExpenses(expRes || []);
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
       } finally {
@@ -246,6 +262,96 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <DollarSign size={20} className="text-emerald-600" />
+              Recent Income
+            </h3>
+            <span className="text-xs text-stone-400">{transactions.length} transactions</span>
+          </div>
+          {transactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-stone-400">
+              <DollarSign size={32} className="mb-2 opacity-30" />
+              <p className="text-sm">No income data</p>
+            </div>
+          ) : (
+            <div className={`${isMobile ? 'max-h-[300px] overflow-y-auto' : ''}`}>
+              <table className="w-full">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="text-left text-xs font-semibold text-stone-500 uppercase">
+                    <th className="pb-2">Date</th>
+                    <th className="pb-2">Customer</th>
+                    <th className="pb-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {transactions.slice(0, 10).map((tx: any, idx: number) => (
+                    <tr key={tx.id || idx} className="border-t border-stone-100">
+                      <td className="py-2.5 text-stone-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={12} className="text-stone-400" />
+                          {tx.createdAt ? format(new Date(tx.createdAt), 'dd MMM') : '-'}
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-medium text-stone-800">{tx.customerName || '-'}</td>
+                      <td className="py-2.5 text-right font-semibold text-emerald-600">
+                        {formatCurrency(tx.totalAmount || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <TrendingDown size={20} className="text-red-600" />
+              Recent Expenses
+            </h3>
+            <span className="text-xs text-stone-400">{expenses.length} items</span>
+          </div>
+          {expenses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-stone-400">
+              <TrendingDown size={32} className="mb-2 opacity-30" />
+              <p className="text-sm">No expense data</p>
+            </div>
+          ) : (
+            <div className={`${isMobile ? 'max-h-[300px] overflow-y-auto' : ''}`}>
+              <table className="w-full">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="text-left text-xs font-semibold text-stone-500 uppercase">
+                    <th className="pb-2">Date</th>
+                    <th className="pb-2">Description</th>
+                    <th className="pb-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {expenses.slice(0, 10).map((exp: any, idx: number) => (
+                    <tr key={exp.id || idx} className="border-t border-stone-100">
+                      <td className="py-2.5 text-stone-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={12} className="text-stone-400" />
+                          {exp.date ? format(new Date(exp.date), 'dd MMM') : '-'}
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-medium text-stone-800">{exp.description || '-'}</td>
+                      <td className="py-2.5 text-right font-semibold text-red-500">
+                        {formatCurrency(exp.amount || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
