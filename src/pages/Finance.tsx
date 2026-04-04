@@ -81,6 +81,13 @@ export default function Finance() {
   const openViewModal = async (id: number) => {
     try {
       const data = await fetchApi(`/transactions/${id}`);
+      console.log('Transaction detail response:', JSON.stringify(data));
+      if (data && data.items) {
+        console.log('Items array:', JSON.stringify(data.items));
+        data.items.forEach((item: any, idx: number) => {
+          console.log(`Item ${idx}:`, JSON.stringify(item));
+        });
+      }
       setViewData(data);
       setIsViewModalOpen(true);
     } catch (error) {

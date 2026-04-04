@@ -747,7 +747,12 @@ app.get('/api/transactions/:id', authenticateToken, async (req, res) => {
     const [itemRows]: any = await pool.query('SELECT transaction_items.*, items.name as itemName FROM transaction_items LEFT JOIN items ON transaction_items.itemId = items.id WHERE transactionId = ?', [id]);
     
     console.log(`[DEBUG] Found ${itemRows.length} items for Transaction ID: ${id}`);
-    res.json({ ...txRows[0], items: itemRows });
+    console.log(`[DEBUG] Item data:`, JSON.stringify(itemRows));
+    
+    const items = Array.isArray(itemRows) ? itemRows : [];
+    const response = { ...txRows[0], items };
+    console.log(`[DEBUG] Full response:`, JSON.stringify(response));
+    res.json(response);
   } catch (err: any) {
     console.error(`[FATAL ERROR] Failed to fetch transaction details:`, err);
     res.status(500).json({ error: 'Gagal mengambil detail transaksi: ' + err.message });
