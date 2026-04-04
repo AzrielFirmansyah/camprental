@@ -30,19 +30,31 @@ async function setupDatabase() {
   let dbName = process.env.DB_NAME || 'camprental';
 
   // Railway MySQL environment variables
-  if (process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL) {
+  if (process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL) {
     try {
-      const mysqlUrl = process.env.MYSQL_PUBLIC_URL || process.env.MYSQL_URL || '';
-      const url = new URL(mysqlUrl);
-      dbHost = url.hostname;
-      dbPort = parseInt(url.port) || 3306;
-      dbUser = url.username;
-      dbPass = url.password;
-      dbName = url.pathname.replace('/', '') || 'railway';
-      console.log(`[DB] Using Railway MySQL (${dbHost}:${dbPort}/${dbName})`);
+      const mysqlUrl = process.env.MYSQL_PUBLIC_URL || process.env.MYSQL_URL || process.env.DATABASE_URL || '';
+      if (mysqlUrl && mysqlUrl.includes('mysql://')) {
+        const url = new URL(mysqlUrl);
+        dbHost = url.hostname;
+        dbPort = parseInt(url.port) || 3306;
+        dbUser = url.username;
+        dbPass = url.password;
+        dbName = url.pathname.replace('/', '') || 'railway';
+        console.log(`[DB] Using Railway MySQL (${dbHost}:${dbPort}/${dbName})`);
+      }
     } catch (e) {
       console.log('[DB] Failed to parse MYSQL_URL, using default config');
     }
+  }
+
+  // Check for individual Railway variables
+  if (process.env.RAILWAY_MYSQL_HOST) {
+    dbHost = process.env.RAILWAY_MYSQL_HOST;
+    dbPort = parseInt(process.env.RAILWAY_MYSQL_PORT || '3306');
+    dbUser = process.env.RAILWAY_MYSQL_USER || 'root';
+    dbPass = process.env.RAILWAY_MYSQL_PASSWORD || '';
+    dbName = process.env.RAILWAY_MYSQL_DATABASE || 'camprental';
+    console.log(`[DB] Using Railway individual vars (${dbHost}:${dbPort}/${dbName})`);
   }
 
   console.log(`[DB] Connecting to ${dbHost}:${dbPort} / ${dbName}...`);
