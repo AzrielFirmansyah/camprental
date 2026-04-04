@@ -8,6 +8,7 @@ import POS from './pages/POS';
 import Finance from './pages/Finance';
 import Users from './pages/Users';
 import Master from './pages/Master';
+import { NotificationProvider } from './components/NotificationContext';
 
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles?: string[] }) => {
   const token = localStorage.getItem('token');
@@ -28,30 +29,32 @@ const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles?
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="pos" element={<POS />} />
-          <Route path="finance" element={<Finance />} />
-          <Route path="users" element={
-            <ProtectedRoute roles={['admin']}>
-              <Users />
+      <NotificationProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout />
             </ProtectedRoute>
-          } />
-          <Route path="master" element={
-            <ProtectedRoute roles={['admin']}>
-              <Master />
-            </ProtectedRoute>
-          } />
-        </Route>
-      </Routes>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="pos" element={<POS />} />
+            <Route path="finance" element={<Finance />} />
+            <Route path="users" element={
+              <ProtectedRoute roles={['admin']}>
+                <Users />
+              </ProtectedRoute>
+            } />
+            <Route path="master" element={
+              <ProtectedRoute roles={['admin']}>
+                <Master />
+              </ProtectedRoute>
+            } />
+          </Route>
+        </Routes>
+      </NotificationProvider>
     </BrowserRouter>
   );
 }

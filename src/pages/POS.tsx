@@ -3,6 +3,7 @@ import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Plus, Minus, Trash2, Calendar, User, Phone, CheckCircle2, AlertCircle, Printer, X } from 'lucide-react';
 import { addDays, format, differenceInDays } from 'date-fns';
+import { useNotifications } from '../components/NotificationContext';
 
 export default function POS() {
   const [items, setItems] = useState<any[]>([]);
@@ -25,6 +26,7 @@ export default function POS() {
   const [discountName, setDiscountName] = useState('Tidak Ada Diskon');
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState(false);
+  const { addNotification } = useNotifications();
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -162,6 +164,9 @@ export default function POS() {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+
+      const totalItems = cart.reduce((sum: number, c: any) => sum + c.quantity, 0);
+      addNotification('success', 'Transaksi Berhasil!', `Total: Rp ${totalAmount.toLocaleString('id-ID')} untuk ${totalItems} item`);
 
       setLastTransactionAmount(totalAmount);
       setLastTransactionData(payload);
