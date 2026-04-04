@@ -19,6 +19,14 @@
       "dest": "/server.ts"
     },
     {
+      "src": "/logo.png",
+      "dest": "/logo.png"
+    },
+    {
+      "src": "/background.png",
+      "dest": "/background.png"
+    },
+    {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
     },
