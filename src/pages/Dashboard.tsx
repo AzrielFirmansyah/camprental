@@ -113,7 +113,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-stone-900">Dashboard Overview</h1>
       </div>
 
-      {/* Stats Cards */}
+      {/* Dashboard Stats */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
