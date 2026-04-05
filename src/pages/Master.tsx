@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit, Trash2, Search, Database, List, Tag, Percent, CreditCard } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Database, List, Tag, Percent, CreditCard, FileText } from 'lucide-react';
 
 export default function Master() {
-  const [activeTab, setActiveTab] = useState<'categories' | 'statuses' | 'discounts' | 'payments'>('categories');
+  const [activeTab, setActiveTab] = useState<string>('categories');
   const [categories, setCategories] = useState<any[]>([]);
   const [itemStatuses, setItemStatuses] = useState<any[]>([]);
   const [discounts, setDiscounts] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [transactionStatuses, setTransactionStatuses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: 'category' | 'status' | 'discount' | 'payment' } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string } | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -26,21 +27,24 @@ export default function Master() {
   const [currentStatusPage, setCurrentStatusPage] = useState(1);
   const [currentDiscountPage, setCurrentDiscountPage] = useState(1);
   const [currentPaymentPage, setCurrentPaymentPage] = useState(1);
+  const [currentTxStatusPage, setCurrentTxStatusPage] = useState(1);
   const itemsPerPage = 8;
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [catsRes, statusesRes, discountsRes, paymentsRes] = await Promise.allSettled([
+      const [catsRes, statusesRes, discountsRes, paymentsRes, txStatusesRes] = await Promise.allSettled([
         fetchApi('/categories'),
         fetchApi('/item_statuses'),
         fetchApi('/discounts'),
-        fetchApi('/payment_methods')
+        fetchApi('/payment_methods'),
+        fetchApi('/transaction_statuses')
       ]);
       setCategories(catsRes.status === 'fulfilled' ? catsRes.value : []);
       setItemStatuses(statusesRes.status === 'fulfilled' ? statusesRes.value : []);
       setDiscounts(discountsRes.status === 'fulfilled' ? discountsRes.value : []);
       setPaymentMethods(paymentsRes.status === 'fulfilled' ? paymentsRes.value : []);
+      setTransactionStatuses(txStatusesRes.status === 'fulfilled' ? txStatusesRes.value : []);
     } catch (error) {
       console.error('Failed to load data', error);
     } finally {
@@ -60,9 +64,12 @@ export default function Master() {
     if (activeTab === 'categories') {
       endpoint = '/categories';
       body = { name: formData.name };
-    } else if (activeTab === 'statuses') {
+} else if (activeTab === 'statuses') {
       endpoint = '/item_statuses';
       body = { name: formData.name, color: formData.color, description: formData.description };
+    } else if (activeTab === 'txstatuses') {
+      endpoint = '/transaction_statuses';
+      body = { name: formData.name };
     } else if (activeTab === 'discounts') {
       endpoint = '/discounts';
       body = { name: formData.name, percentage: Number(formData.percentage) };
@@ -72,6 +79,7 @@ export default function Master() {
     }
 
     try {
+      console.log(`[Master] Saving to ${endpoint}, body:`, body);
       if (editingItem) {
         await fetchApi(`${endpoint}/${editingItem.id}`, {
           method: 'PUT',
@@ -83,6 +91,7 @@ export default function Master() {
           body: JSON.stringify(body)
         });
       }
+      console.log(`[Master] Save success`);
       setIsModalOpen(false);
       loadData();
     } catch (error: any) {
@@ -92,7 +101,7 @@ export default function Master() {
     }
   };
 
-  const confirmDelete = (id: number, type: 'category' | 'status' | 'discount' | 'payment') => {
+  const confirmDelete = (id: number, type: string) => {
     setItemToDelete({ id, type });
     setDeleteModalOpen(true);
   };
@@ -104,6 +113,7 @@ export default function Master() {
     if (type === 'category') endpoint = `/categories/${id}`;
     else if (type === 'status') endpoint = `/item_statuses/${id}`;
     else if (type === 'discount') endpoint = `/discounts/${id}`;
+    else if (type === 'txstatus') endpoint = `/transaction_statuses/${id}`;
     else endpoint = `/payment_methods/${id}`;
 
     try {
@@ -143,6 +153,7 @@ export default function Master() {
     if (activeTab === 'categories') return categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (activeTab === 'statuses') return itemStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (activeTab === 'discounts') return discounts.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (activeTab === 'txstatuses') return transactionStatuses.filter(ts => ts.name.toLowerCase().includes(searchTerm.toLowerCase()));
     return paymentMethods.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   };
 
@@ -150,8 +161,8 @@ export default function Master() {
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentPage = activeTab === 'categories' ? currentCatPage : activeTab === 'statuses' ? currentStatusPage : activeTab === 'discounts' ? currentDiscountPage : currentPaymentPage;
-  const setCurrentPage = activeTab === 'categories' ? setCurrentCatPage : activeTab === 'statuses' ? setCurrentStatusPage : activeTab === 'discounts' ? setCurrentDiscountPage : setCurrentPaymentPage;
+  const currentPage = activeTab === 'categories' ? currentCatPage : activeTab === 'statuses' ? currentStatusPage : activeTab === 'discounts' ? currentDiscountPage : activeTab === 'txstatuses' ? currentTxStatusPage : currentPaymentPage;
+  const setCurrentPage = activeTab === 'categories' ? setCurrentCatPage : activeTab === 'statuses' ? setCurrentStatusPage : activeTab === 'discounts' ? setCurrentDiscountPage : activeTab === 'txstatuses' ? setCurrentTxStatusPage : setCurrentPaymentPage;
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -198,7 +209,7 @@ export default function Master() {
           className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
         >
           <Plus size={20} />
-          <span>Add {activeTab === 'categories' ? 'Category' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Discount' : 'Payment'}</span>
+          <span>Add {activeTab === 'categories' ? 'Category' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Discount' : activeTab === 'txstatuses' ? 'Tx Status' : 'Payment'}</span>
         </button>
       </div>
 
@@ -244,6 +255,16 @@ export default function Master() {
           <CreditCard size={16} />
           Payments
         </button>
+        <button
+          onClick={() => { setActiveTab('txstatuses'); setSearchTerm(''); }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'txstatuses'
+            ? 'bg-white text-emerald-600 shadow-sm'
+            : 'text-stone-500 hover:text-stone-700'
+            }`}
+        >
+          <FileText size={16} />
+          Tx Status
+        </button>
       </div>
 
       <motion.div
@@ -273,7 +294,7 @@ export default function Master() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-20">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  {activeTab === 'categories' ? 'Name' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Promo' : 'Method'}
+                  {activeTab === 'categories' ? 'Name' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Promo' : activeTab === 'txstatuses' ? 'Status' : 'Method'}
                 </th>
                 {activeTab === 'statuses' && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Description</th>
@@ -324,7 +345,7 @@ export default function Master() {
                       <button onClick={() => openModal(item)} className="text-blue-600 hover:text-blue-800 mr-4 transition-colors">
                         <Edit size={18} />
                       </button>
-                      <button onClick={() => confirmDelete(item.id, activeTab === 'categories' ? 'category' : activeTab === 'statuses' ? 'status' : activeTab === 'discounts' ? 'discount' : 'payment')} className="text-red-600 hover:text-red-800 transition-colors">
+                      <button onClick={() => confirmDelete(item.id, activeTab === 'categories' ? 'category' : activeTab === 'statuses' ? 'status' : activeTab === 'txstatuses' ? 'txstatus' : activeTab === 'discounts' ? 'discount' : 'payment')} className="text-red-600 hover:text-red-800 transition-colors">
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -471,7 +492,7 @@ export default function Master() {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <h3 className="text-lg leading-6 font-medium text-stone-900">Delete {itemToDelete?.type}</h3>
                     <div className="mt-2">
-                       <p className="text-sm text-stone-500">Yakin ingin menghapus data master ini?</p>
+                      <p className="text-sm text-stone-500">Yakin ingin menghapus data master ini?</p>
                     </div>
                   </div>
                 </div>

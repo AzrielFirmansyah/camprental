@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Key,
   Search,
-  Bell
+  Bell,
+  FileText
 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import GlobalSearch from './GlobalSearch';
@@ -112,16 +113,25 @@ export default function Layout() {
     }
   };
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'owner'] },
-    { path: '/inventory', label: 'Inventory', icon: Package, roles: ['admin', 'owner'] },
-    { path: '/pos', label: 'POS / Rental', icon: ShoppingCart, roles: ['admin', 'owner'] },
-    { path: '/finance', label: 'Finance', icon: DollarSign, roles: ['admin', 'owner'] },
+  const ownerNavItems = [
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['owner'] },
+    { path: '/inventory', label: 'Inventory', icon: Package, roles: ['owner'] },
+    { path: '/pos', label: 'POS / Rental', icon: ShoppingCart, roles: ['owner'] },
+    { path: '/finance', label: 'Finance', icon: DollarSign, roles: ['owner'] },
+    { path: '/report', label: 'Report', icon: FileText, roles: ['owner'] },
+  ];
+
+  const adminNavItems = [
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { path: '/inventory', label: 'Inventory', icon: Package, roles: ['admin'] },
+    { path: '/pos', label: 'POS / Rental', icon: ShoppingCart, roles: ['admin'] },
+    { path: '/finance', label: 'Finance', icon: DollarSign, roles: ['admin'] },
+    { path: '/report', label: 'Report', icon: FileText, roles: ['admin'] },
     { path: '/users', label: 'Users', icon: Users, roles: ['admin'] },
     { path: '/master', label: 'Master', icon: Database, roles: ['admin'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => user && item.roles.includes(user.role));
+  const filteredNavItems = user?.role === 'admin' ? adminNavItems.filter(item => user && item.roles.includes(user.role)) : ownerNavItems.filter(item => user && item.roles.includes(user.role));
 
   return (
     <div className="flex h-screen bg-stone-100 font-sans text-stone-900">

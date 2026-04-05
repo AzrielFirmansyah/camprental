@@ -628,6 +628,69 @@ app.delete('/api/payment_methods/:id', authenticateToken, requireAdmin, async (r
   }
 });
 
+// Transaction Statuses API
+app.get('/api/transaction_statuses', authenticateToken, async (req, res) => {
+  try {
+    let [rows]: any = await pool.query('SELECT * FROM transaction_statuses ORDER BY id ASC');
+    if (!rows || rows.length === 0) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS transaction_statuses (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL)`);
+      await pool.query("INSERT INTO transaction_statuses (name) VALUES ('Aktif'), ('Dikembalikan')");
+      [rows] = await pool.query('SELECT * FROM transaction_statuses ORDER BY id ASC');
+    }
+    res.json(rows);
+  } catch (err: any) {
+    console.log('[TX STATUS] Auto-creating table...');
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS transaction_statuses (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL)`);
+      await pool.query("INSERT INTO transaction_statuses (name) VALUES ('Aktif'), ('Dikembalikan')");
+      const [rows] = await pool.query('SELECT * FROM transaction_statuses ORDER BY id ASC');
+      res.json(rows);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to create table' });
+    }
+  }
+});
+
+app.post('/api/transaction_statuses', authenticateToken, requireAdmin, async (req, res) => {
+  const { name } = req.body;
+  try {
+    const [result]: any = await pool.query('INSERT INTO transaction_statuses (name) VALUES (?)', [name]);
+    res.json({ id: result.insertId, message: 'Transaction status created' });
+  } catch (err: any) {
+    console.error('MySQL Error in POST transaction_statuses:', err);
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      try {
+        await pool.query(`CREATE TABLE IF NOT EXISTS transaction_statuses (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+        const [result]: any = await pool.query('INSERT INTO transaction_statuses (name) VALUES (?)', [name]);
+        return res.json({ id: result.insertId, message: 'Transaction status created after auto-repair' });
+      } catch (repairErr: any) {
+        return res.status(500).json({ error: 'Database repair failed: ' + repairErr.message });
+      }
+    }
+    res.status(500).json({ error: err.message || 'Server error during save' });
+  }
+});
+
+app.put('/api/transaction_statuses/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const { name } = req.body;
+  try {
+    await pool.query('UPDATE transaction_statuses SET name = ? WHERE id = ?', [name, req.params.id]);
+    res.json({ message: 'Transaction status updated' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+app.delete('/api/transaction_statuses/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM transaction_statuses WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Transaction status deleted' });
+  } catch (err: any) {
+    console.error('[DELETE] Transaction Status Error:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'Error tidak diketahui') });
+  }
+});
+
 // Item Statuses API
 app.get('/api/item_statuses', authenticateToken, async (req, res) => {
   try {
@@ -810,6 +873,42 @@ app.post('/api/transactions/:id/return', authenticateToken, async (req, res) => 
     res.status(500).json({ error: 'Return failed' });
   } finally {
     conn.release();
+  }
+});
+
+app.get('/api/transactions/report', authenticateToken, async (req, res) => {
+  try {
+    const { year, month, date, paymentMethod, status } = req.query;
+    let query = 'SELECT transactions.*, users.name as userName FROM transactions LEFT JOIN users ON transactions.userId = users.id WHERE 1=1';
+    const params: any[] = [];
+
+    if (year) {
+      query += ' AND YEAR(transactions.createdAt) = ?';
+      params.push(parseInt(year as string));
+    }
+    if (month) {
+      query += ' AND MONTH(transactions.createdAt) = ?';
+      params.push(parseInt(month as string));
+    }
+    if (date) {
+      query += ' AND DATE(transactions.createdAt) = ?';
+      params.push(date);
+    }
+    if (paymentMethod && paymentMethod !== 'all') {
+      query += ' AND transactions.paymentMethod = ?';
+      params.push(paymentMethod);
+    }
+    if (status && status !== 'all') {
+      query += ' AND transactions.status = ?';
+      params.push(status);
+    }
+
+    query += ' ORDER BY transactions.createdAt DESC';
+    const [rows] = await pool.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('[ERROR] Failed to fetch report:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
