@@ -42,7 +42,7 @@ export default function Inventory() {
       const sortedCategories = [...fetchedCategories].sort((a, b) => {
         const catA = a.name?.toLowerCase() || '';
         const catB = b.name?.toLowerCase() || '';
-        
+
         if (catA === 'tenda' && catB !== 'tenda') return -1;
         if (catA !== 'tenda' && catB === 'tenda') return 1;
         return catA.localeCompare(catB);
@@ -59,6 +59,26 @@ export default function Inventory() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const handleSearchFilter = () => {
+      const itemId = localStorage.getItem('searchItemId');
+      const itemName = localStorage.getItem('searchItemName');
+      
+      if (itemId) {
+        localStorage.removeItem('searchItemId');
+        localStorage.removeItem('searchItemName');
+        loadData().then(() => {
+          setCurrentPage(1);
+          setItems((prev: any[]) => prev.filter(i => i.id.toString() === itemId));
+        });
+      } else if (itemName) {
+        localStorage.removeItem('searchItemName');
+        setSearchTerm(itemName);
+      }
+    };
+    handleSearchFilter();
   }, []);
 
   const handlePreSubmit = (e: React.FormEvent) => {
@@ -142,7 +162,7 @@ export default function Inventory() {
     setIsModalOpen(true);
   };
 
-  const filteredItems = items.filter(item => 
+  const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.categoryName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -188,10 +208,10 @@ export default function Inventory() {
 
   const getDisplayStatus = (item: any) => {
     const s = item.status?.toLowerCase();
-    
+
     if (s === 'habis' || item.availableStock <= 0) return { text: 'Habis', colors: 'bg-red-100 text-red-800' };
     if (s === 'menipis' || (item.availableStock >= 1 && item.availableStock <= 3)) return { text: 'Menipis', colors: 'bg-orange-100 text-orange-800' };
-    
+
     return { text: 'Ada', colors: 'bg-emerald-100 text-emerald-800' };
   };
 
@@ -250,7 +270,7 @@ export default function Inventory() {
                 currentItems.map((item) => {
                   const status = getDisplayStatus(item);
                   return (
-                    <motion.tr 
+                    <motion.tr
                       key={item.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -341,7 +361,7 @@ export default function Inventory() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-stone-700">Item Name</label>
-                      <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                      <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
@@ -392,17 +412,17 @@ export default function Inventory() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-stone-700">Daily Price</label>
-                        <input type="number" required value={formData.dailyPrice} onChange={(e) => setFormData({...formData, dailyPrice: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <input type="number" required value={formData.dailyPrice} onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-stone-700">Weekly Price</label>
-                        <input type="number" required value={formData.weeklyPrice} onChange={(e) => setFormData({...formData, weeklyPrice: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <input type="number" required value={formData.weeklyPrice} onChange={(e) => setFormData({ ...formData, weeklyPrice: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-stone-700">Total Stock</label>
-                        <input type="number" required value={formData.totalStock} onChange={(e) => setFormData({...formData, totalStock: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <input type="number" required value={formData.totalStock} onChange={(e) => setFormData({ ...formData, totalStock: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-stone-700">Status (Automatic)</label>

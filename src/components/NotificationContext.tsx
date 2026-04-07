@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, Package, Search, Bell } from 'lucide-react';
 
@@ -82,6 +82,16 @@ function NotificationToast({ notifications, removeNotification }: { notification
 }
 
 function NotificationItem({ notification, index, onClose }: { notification: Notification; index: number; onClose: () => void }) {
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(() => onClose(), 300);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
   const getIcon = () => {
     switch (notification.type) {
       case 'stock_low': return <AlertTriangle className="text-amber-500" size={18} />;
@@ -105,9 +115,9 @@ function NotificationItem({ notification, index, onClose }: { notification: Noti
   return (
     <motion.div
       initial={{ opacity: 0, x: 50, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
+      animate={{ opacity: isExiting ? 0 : 1, x: isExiting ? 50 : 0, scale: isExiting ? 0.9 : 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ duration: 0.3 }}
       className={`bg-white rounded-xl shadow-lg border border-stone-200 border-l-4 ${getBorderColor()} overflow-hidden`}
     >
       <div className="p-4">

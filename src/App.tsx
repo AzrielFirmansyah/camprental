@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import POS from './pages/POS';
 import Finance from './pages/Finance';
-import Report from './pages/Report';
 import Users from './pages/Users';
 import Master from './pages/Master';
 import { NotificationProvider } from './components/NotificationContext';
@@ -43,7 +42,6 @@ export default function App() {
             <Route path="inventory" element={<Inventory />} />
             <Route path="pos" element={<POS />} />
             <Route path="finance" element={<Finance />} />
-            <Route path="report" element={<Report />} />
             <Route path="users" element={
               <ProtectedRoute roles={['admin']}>
                 <Users />

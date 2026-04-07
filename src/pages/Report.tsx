@@ -27,7 +27,7 @@ export default function Report() {
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [transactionStatuses, setTransactionStatuses] = useState<any[]>([]);
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear().toString(),
+    year: '',
     month: '',
     date: '',
     paymentMethod: 'all',
@@ -52,6 +52,7 @@ export default function Report() {
 
   const fetchReport = async () => {
     setLoading(true);
+    setData([]);
     try {
       const params = new URLSearchParams();
       if (filters.year) params.append('year', filters.year);
@@ -59,19 +60,35 @@ export default function Report() {
       if (filters.date) params.append('date', filters.date);
       if (filters.paymentMethod !== 'all') params.append('paymentMethod', filters.paymentMethod);
       if (filters.status !== 'all') params.append('status', filters.status);
+      params.append('_t', Date.now().toString());
 
-      const result = await fetchApi(`/transactions/report?${params.toString()}`);
+      console.log('Fetching report from: /api/transactions/report?' + params.toString());
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/transactions/report?' + params.toString(), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'An error occurred' }));
+        throw new Error(error.error || 'An error occurred');
+      }
+      
+      const result = await response.json();
+      console.log('Report result:', result);
       setData(result || []);
-    } catch (error) {
-      console.error('Failed to fetch report', error);
+    } catch (error: any) {
+      console.error('Failed to fetch report:', error);
+      alert(error.message || 'Gagal memuat laporan');
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchReport();
-  }, []);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -79,6 +96,28 @@ export default function Report() {
 
   const handleExecute = () => {
     fetchReport();
+  };
+
+  const handleLoadAll = () => {
+    setFilters({
+      year: '',
+      month: '',
+      date: '',
+      paymentMethod: 'all',
+      status: 'all',
+    });
+    fetchReport();
+  };
+
+  const handleClearSearch = () => {
+    setFilters({
+      year: '',
+      month: '',
+      date: '',
+      paymentMethod: 'all',
+      status: 'all',
+    });
+    setData([]);
   };
 
   const formatCurrency = (amount: number) => {
@@ -192,22 +231,35 @@ export default function Report() {
           </div>
         </div>
 
-        <button
-          onClick={handleExecute}
-          disabled={loading}
-          className="mt-4 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          <Download size={18} />
-          {loading ? 'Memuat...' : 'Execute'}
-        </button>
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={handleLoadAll}
+            disabled={loading}
+            className="px-6 py-3 bg-stone-600 text-white rounded-xl font-bold hover:bg-stone-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <Download size={18} />
+            {loading ? 'Memuat...' : 'Load All'}
+          </button>
+          <button
+            onClick={handleExecute}
+            disabled={loading}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <Download size={18} />
+            {loading ? 'Memuat...' : 'Execute'}
+          </button>
+        </div>
       </div>
 
       {data.length > 0 && (
-        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-          <div className="flex items-center justify-between">
+        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-emerald-800">Total Transaksi: {data.length}</span>
             <span className="text-lg font-bold text-emerald-700">{formatCurrency(totalAmount)}</span>
           </div>
+          <button onClick={handleClearSearch} className="text-xs text-stone-500 hover:text-stone-700">
+            Clear
+          </button>
         </div>
       )}
 

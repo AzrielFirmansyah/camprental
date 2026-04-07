@@ -3,8 +3,11 @@ import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, Search, Database, List, Tag, Percent, CreditCard, FileText } from 'lucide-react';
 
+// ✅ Fix 1: Tambah 'txstatuses' dan 'payments' ke union type, hapus duplikat 'statuses'
+type ActiveTab = 'categories' | 'statuses' | 'discounts' | 'payments' | 'txstatuses';
+
 export default function Master() {
-  const [activeTab, setActiveTab] = useState<string>('categories');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('categories');
   const [categories, setCategories] = useState<any[]>([]);
   const [itemStatuses, setItemStatuses] = useState<any[]>([]);
   const [discounts, setDiscounts] = useState<any[]>([]);
@@ -14,7 +17,8 @@ export default function Master() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string } | null>(null);
+  // ✅ Fix 2: Tambah 'txstatus' ke union type delete
+  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: 'category' | 'status' | 'discount' | 'payment' | 'txstatus' } | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -64,22 +68,22 @@ export default function Master() {
     if (activeTab === 'categories') {
       endpoint = '/categories';
       body = { name: formData.name };
-} else if (activeTab === 'statuses') {
+    } else if (activeTab === 'statuses') {
       endpoint = '/item_statuses';
       body = { name: formData.name, color: formData.color, description: formData.description };
-    } else if (activeTab === 'txstatuses') {
-      endpoint = '/transaction_statuses';
-      body = { name: formData.name };
     } else if (activeTab === 'discounts') {
       endpoint = '/discounts';
       body = { name: formData.name, percentage: Number(formData.percentage) };
+    } else if (activeTab === 'txstatuses') {
+      // ✅ Fix 3: txstatuses punya endpoint sendiri
+      endpoint = '/transaction_statuses';
+      body = { name: formData.name };
     } else {
       endpoint = '/payment_methods';
       body = { name: formData.name };
     }
 
     try {
-      console.log(`[Master] Saving to ${endpoint}, body:`, body);
       if (editingItem) {
         await fetchApi(`${endpoint}/${editingItem.id}`, {
           method: 'PUT',
@@ -91,7 +95,6 @@ export default function Master() {
           body: JSON.stringify(body)
         });
       }
-      console.log(`[Master] Save success`);
       setIsModalOpen(false);
       loadData();
     } catch (error: any) {
@@ -101,7 +104,8 @@ export default function Master() {
     }
   };
 
-  const confirmDelete = (id: number, type: string) => {
+  // ✅ Fix 4: Tambah 'txstatus' ke parameter type
+  const confirmDelete = (id: number, type: 'category' | 'status' | 'discount' | 'payment' | 'txstatus') => {
     setItemToDelete({ id, type });
     setDeleteModalOpen(true);
   };
@@ -113,6 +117,7 @@ export default function Master() {
     if (type === 'category') endpoint = `/categories/${id}`;
     else if (type === 'status') endpoint = `/item_statuses/${id}`;
     else if (type === 'discount') endpoint = `/discounts/${id}`;
+    // ✅ Fix 5: txstatus punya endpoint sendiri, tidak duplikat dengan 'status'
     else if (type === 'txstatus') endpoint = `/transaction_statuses/${id}`;
     else endpoint = `/payment_methods/${id}`;
 
@@ -153,16 +158,28 @@ export default function Master() {
     if (activeTab === 'categories') return categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (activeTab === 'statuses') return itemStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (activeTab === 'discounts') return discounts.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    // ✅ Fix 6: txstatuses filter data sendiri
     if (activeTab === 'txstatuses') return transactionStatuses.filter(ts => ts.name.toLowerCase().includes(searchTerm.toLowerCase()));
     return paymentMethods.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   };
 
   const filteredData = getFilteredData();
 
-  // Pagination logic
+  // ✅ Fix 7: Pagination logic — pisahkan 'txstatuses' dan 'payments' dengan benar
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentPage = activeTab === 'categories' ? currentCatPage : activeTab === 'statuses' ? currentStatusPage : activeTab === 'discounts' ? currentDiscountPage : activeTab === 'txstatuses' ? currentTxStatusPage : currentPaymentPage;
-  const setCurrentPage = activeTab === 'categories' ? setCurrentCatPage : activeTab === 'statuses' ? setCurrentStatusPage : activeTab === 'discounts' ? setCurrentDiscountPage : activeTab === 'txstatuses' ? setCurrentTxStatusPage : setCurrentPaymentPage;
+  const currentPage =
+    activeTab === 'categories' ? currentCatPage :
+      activeTab === 'statuses' ? currentStatusPage :
+        activeTab === 'discounts' ? currentDiscountPage :
+          activeTab === 'txstatuses' ? currentTxStatusPage :
+            currentPaymentPage;
+
+  const setCurrentPage =
+    activeTab === 'categories' ? setCurrentCatPage :
+      activeTab === 'statuses' ? setCurrentStatusPage :
+        activeTab === 'discounts' ? setCurrentDiscountPage :
+          activeTab === 'txstatuses' ? setCurrentTxStatusPage :
+            setCurrentPaymentPage;
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -209,6 +226,7 @@ export default function Master() {
           className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
         >
           <Plus size={20} />
+          {/* ✅ Fix 8: Label tombol Add untuk txstatuses */}
           <span>Add {activeTab === 'categories' ? 'Category' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Discount' : activeTab === 'txstatuses' ? 'Tx Status' : 'Payment'}</span>
         </button>
       </div>
@@ -255,6 +273,7 @@ export default function Master() {
           <CreditCard size={16} />
           Payments
         </button>
+        {/* ✅ Fix 9: Tab Tx Status sekarang set ke 'txstatuses', bukan 'statuses' */}
         <button
           onClick={() => { setActiveTab('txstatuses'); setSearchTerm(''); }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'txstatuses'
@@ -294,7 +313,8 @@ export default function Master() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider w-20">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  {activeTab === 'categories' ? 'Name' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Promo' : activeTab === 'txstatuses' ? 'Status' : 'Method'}
+                  {/* ✅ Fix 10: Header kolom untuk txstatuses */}
+                  {activeTab === 'categories' ? 'Name' : activeTab === 'statuses' ? 'Status' : activeTab === 'discounts' ? 'Promo' : activeTab === 'txstatuses' ? 'Tx Status' : 'Method'}
                 </th>
                 {activeTab === 'statuses' && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Description</th>
@@ -345,7 +365,8 @@ export default function Master() {
                       <button onClick={() => openModal(item)} className="text-blue-600 hover:text-blue-800 mr-4 transition-colors">
                         <Edit size={18} />
                       </button>
-                      <button onClick={() => confirmDelete(item.id, activeTab === 'categories' ? 'category' : activeTab === 'statuses' ? 'status' : activeTab === 'txstatuses' ? 'txstatus' : activeTab === 'discounts' ? 'discount' : 'payment')} className="text-red-600 hover:text-red-800 transition-colors">
+                      {/* ✅ Fix 11: confirmDelete pakai 'txstatus' untuk tab txstatuses */}
+                      <button onClick={() => confirmDelete(item.id, activeTab === 'categories' ? 'category' : activeTab === 'statuses' ? 'status' : activeTab === 'discounts' ? 'discount' : activeTab === 'txstatuses' ? 'txstatus' : 'payment')} className="text-red-600 hover:text-red-800 transition-colors">
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -398,8 +419,9 @@ export default function Master() {
                   </h3>
                   <div className="space-y-4">
                     <div>
+                      {/* ✅ Fix 12: Label input untuk txstatuses */}
                       <label className="block text-sm font-medium text-stone-700">
-                        {activeTab === 'categories' ? 'Category Name' : activeTab === 'statuses' ? 'Status Name' : activeTab === 'discounts' ? 'Discount Name' : 'Payment Method Name'}
+                        {activeTab === 'categories' ? 'Category Name' : activeTab === 'statuses' ? 'Status Name' : activeTab === 'discounts' ? 'Discount Name' : activeTab === 'txstatuses' ? 'Tx Status Name' : 'Payment Method Name'}
                       </label>
                       <input
                         type="text"

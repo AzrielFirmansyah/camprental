@@ -24,9 +24,9 @@ export default function Login() {
     try {
       await fetchApi('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ 
-          name, 
-          email, 
+        body: JSON.stringify({
+          name,
+          email,
           password,
           role: 'admin'
         }),
@@ -87,7 +87,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm mb-6 flex items-center gap-2"
@@ -98,7 +98,7 @@ export default function Login() {
         )}
 
         {registerSuccess && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-xl text-sm mb-6 flex items-center gap-2"
@@ -186,14 +186,14 @@ export default function Login() {
 
         <div className="mt-6 text-center">
           {isRegister ? (
-            <button 
+            <button
               onClick={() => { setIsRegister(false); setError(''); }}
               className="text-sm text-stone-500 hover:text-stone-700"
             >
               Sudah punya akun? <span className="text-emerald-600 font-semibold">Login</span>
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => { setIsRegister(true); setError(''); }}
               className="text-sm text-stone-500 hover:text-stone-700"
             >
@@ -202,8 +202,9 @@ export default function Login() {
           )}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-stone-100 text-center text-xs text-stone-400">
-          <p>Sewa Outdoor Sameton &bull; Created by Azriel</p>
+        <div className="mt-8 pt-6 border-t border-stone-100 text-center">
+          <p className="text-sm font-bold text-stone-600 uppercase tracking-widest">Sewa Outdoor Sameton</p>
+          <p className="text-xs text-stone-400 mt-1">Created by Azriel</p>
         </div>
       </motion.div>
     </div>

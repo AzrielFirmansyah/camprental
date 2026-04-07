@@ -1,7 +1,7 @@
 {
-  "name": "react-example",
+  "name": "camprental",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": "20.x"
@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "start": "node server.js"
+    "start": "node server.js",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

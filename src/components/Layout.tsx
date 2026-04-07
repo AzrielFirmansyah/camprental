@@ -118,7 +118,6 @@ export default function Layout() {
     { path: '/inventory', label: 'Inventory', icon: Package, roles: ['owner'] },
     { path: '/pos', label: 'POS / Rental', icon: ShoppingCart, roles: ['owner'] },
     { path: '/finance', label: 'Finance', icon: DollarSign, roles: ['owner'] },
-    { path: '/report', label: 'Report', icon: FileText, roles: ['owner'] },
   ];
 
   const adminNavItems = [
@@ -126,7 +125,6 @@ export default function Layout() {
     { path: '/inventory', label: 'Inventory', icon: Package, roles: ['admin'] },
     { path: '/pos', label: 'POS / Rental', icon: ShoppingCart, roles: ['admin'] },
     { path: '/finance', label: 'Finance', icon: DollarSign, roles: ['admin'] },
-    { path: '/report', label: 'Report', icon: FileText, roles: ['admin'] },
     { path: '/users', label: 'Users', icon: Users, roles: ['admin'] },
     { path: '/master', label: 'Master', icon: Database, roles: ['admin'] },
   ];
@@ -151,8 +149,8 @@ export default function Layout() {
           <div className="p-5 pt-5 border-b border-stone-800">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-base font-bold text-white leading-tight">Sewa Outdoor</h1>
-                <p className="text-sm font-medium text-emerald-400">Sameton</p>
+                <h1 className="text-xl font-black text-white leading-tight uppercase tracking-wide" style={{ letterSpacing: '0.1em' }}>Sewa Outdoor</h1>
+                <p className="text-base font-bold text-emerald-400 uppercase tracking-widest mt-1">Sameton</p>
               </div>
               <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-stone-800 rounded-lg">
                 <X size={20} />
@@ -205,8 +203,8 @@ export default function Layout() {
         >
           <div className="p-5 pt-6">
             <div className="mb-2">
-              <h1 className="text-lg font-bold tracking-tight text-white leading-tight">Sewa Outdoor</h1>
-              <p className="text-sm font-medium text-emerald-400">Sameton</p>
+              <h1 className="text-2xl font-black tracking-wide text-white leading-tight uppercase" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '0.15em' }}>Sewa Outdoor</h1>
+              <p className="text-lg font-bold text-emerald-400 uppercase tracking-widest mt-1">Sameton</p>
             </div>
             <div className="h-px bg-gradient-to-r from-emerald-500/60 to-transparent mt-3"></div>
           </div>

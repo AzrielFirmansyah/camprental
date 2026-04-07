@@ -546,6 +546,44 @@ app.get('/api/items', authenticateToken, async (req, res) => {
   res.json(rows);
 });
 
+app.get('/api/search', authenticateToken, async (req, res) => {
+  const { q } = req.query;
+  if (!q || typeof q !== 'string' || q.length < 2) {
+    return res.json({ items: [], transactions: [], categories: [] });
+  }
+  
+  const searchTerm = `%${q.toLowerCase()}%`;
+  const results: { items: any[]; transactions: any[]; categories: any[] } = { items: [], transactions: [], categories: [] };
+  
+  try {
+    const [items] = await pool.query(
+      `SELECT items.*, categories.name as categoryName FROM items 
+       LEFT JOIN categories ON items.categoryId = categories.id 
+       WHERE LOWER(items.name) LIKE ? LIMIT 10`,
+      [searchTerm]
+    );
+    results.items = items;
+    
+    const [transactions] = await pool.query(
+      `SELECT id, customerName, customerPhone, totalAmount, paymentMethod, status, startDate, endDate 
+       FROM transactions 
+       WHERE LOWER(customerName) LIKE ? OR customerPhone LIKE ? OR CAST(id AS CHAR) LIKE ? LIMIT 10`,
+      [searchTerm, searchTerm, searchTerm]
+    );
+    results.transactions = transactions;
+    
+    const [categories] = await pool.query(
+      `SELECT * FROM categories WHERE LOWER(name) LIKE ? LIMIT 5`,
+      [searchTerm]
+    );
+    results.categories = categories;
+    
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Search error' });
+  }
+});
+
 app.post('/api/items', authenticateToken, requireAdmin, async (req, res) => {
   const { name, categoryId, dailyPrice, weeklyPrice, totalStock } = req.body;
   try {
@@ -879,6 +917,8 @@ app.post('/api/transactions/:id/return', authenticateToken, async (req, res) => 
 app.get('/api/transactions/report', authenticateToken, async (req, res) => {
   try {
     const { year, month, date, paymentMethod, status } = req.query;
+    console.log('[REPORT API] Request params:', { year, month, date, paymentMethod, status });
+    
     let query = 'SELECT transactions.*, users.name as userName FROM transactions LEFT JOIN users ON transactions.userId = users.id WHERE 1=1';
     const params: any[] = [];
 
@@ -904,7 +944,11 @@ app.get('/api/transactions/report', authenticateToken, async (req, res) => {
     }
 
     query += ' ORDER BY transactions.createdAt DESC';
+    console.log('[REPORT API] Query:', query);
+    console.log('[REPORT API] Params:', params);
+    
     const [rows] = await pool.query(query, params);
+    console.log('[REPORT API] Found rows:', rows.length);
     res.json(rows);
   } catch (err) {
     console.error('[ERROR] Failed to fetch report:', err);

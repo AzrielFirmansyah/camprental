@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Package, Users, ShoppingCart, FileText } from 'lucide-react';
+import { Search, X, Package, Users, ShoppingCart, FileText, DollarSign, Tag } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 
 interface SearchResult {
-  type: 'transaction' | 'customer' | 'item';
+  type: 'transaction' | 'item' | 'category';
   id: number;
   title: string;
   subtitle: string;
+  icon?: string;
 }
 
 interface GlobalSearchProps {
@@ -39,44 +40,44 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
     setLoading(true);
     try {
-      const [transactions, items] = await Promise.all([
-        fetchApi('/transactions'),
-        fetchApi('/items')
-      ]);
-
+      const data: any = await fetchApi(`/search?q=${encodeURIComponent(searchQuery)}`);
+      
       const searchResults: SearchResult[] = [];
-      const lowerQuery = searchQuery.toLowerCase();
 
-      if (transactions && Array.isArray(transactions)) {
-        transactions
-          .filter((t: any) => 
-            t.customerName?.toLowerCase().includes(lowerQuery) ||
-            t.customerPhone?.includes(lowerQuery) ||
-            t.id.toString().includes(lowerQuery)
-          )
-          .slice(0, 5)
-          .forEach((t: any) => {
-            searchResults.push({
-              type: 'transaction',
-              id: t.id,
-              title: t.customerName || 'Tanpa Nama',
-              subtitle: `#${t.id} - ${t.paymentMethod || 'Cash'}`
-            });
+      if (data.items && data.items.length > 0) {
+        data.items.forEach((i: any) => {
+          searchResults.push({
+            type: 'item',
+            id: i.id,
+            title: i.name,
+            subtitle: `Kategori: ${i.categoryName || '-'} | Stok: ${i.availableStock}/${i.totalStock}`,
+            icon: 'package'
           });
+        });
       }
 
-      if (items && Array.isArray(items)) {
-        items
-          .filter((i: any) => i.name?.toLowerCase().includes(lowerQuery))
-          .slice(0, 5)
-          .forEach((i: any) => {
-            searchResults.push({
-              type: 'item',
-              id: i.id,
-              title: i.name,
-              subtitle: `Stok: ${i.availableStock}/${i.totalStock}`
-            });
+      if (data.transactions && data.transactions.length > 0) {
+        data.transactions.forEach((t: any) => {
+          searchResults.push({
+            type: 'transaction',
+            id: t.id,
+            title: t.customerName || 'Tanpa Nama',
+            subtitle: `#${t.id} | ${t.paymentMethod || 'Cash'} | Rp ${Number(t.totalAmount || 0).toLocaleString('id-ID')}`,
+            icon: 'shoppingCart'
           });
+        });
+      }
+
+      if (data.categories && data.categories.length > 0) {
+        data.categories.forEach((c: any) => {
+          searchResults.push({
+            type: 'category',
+            id: c.id,
+            title: c.name,
+            subtitle: 'Kategori',
+            icon: 'tag'
+          });
+        });
       }
 
       setResults(searchResults);
@@ -94,24 +95,36 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const handleResultClick = (result: SearchResult) => {
     onClose();
-    switch (result.type) {
-      case 'transaction':
-        navigate('/finance');
-        break;
-      case 'item':
-        navigate('/inventory');
-        break;
-      default:
-        break;
+    if (result.type === 'item') {
+      localStorage.setItem('searchItemId', result.id.toString());
+      localStorage.setItem('searchItemName', result.title);
+      navigate('/inventory');
+    } else if (result.type === 'transaction') {
+      localStorage.setItem('searchTransactionId', result.id.toString());
+      localStorage.setItem('searchTransactionName', result.title);
+      navigate('/finance');
+    } else if (result.type === 'category') {
+      localStorage.setItem('searchCategoryId', result.id.toString());
+      localStorage.setItem('searchCategoryName', result.title);
+      navigate('/master');
     }
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'transaction': return <ShoppingCart size={14} />;
-      case 'customer': return <Users size={14} />;
-      case 'item': return <Package size={14} />;
+  const getIcon = (icon?: string) => {
+    switch (icon) {
+      case 'shoppingCart': return <ShoppingCart size={14} />;
+      case 'package': return <Package size={14} />;
+      case 'tag': return <Tag size={14} />;
       default: return <FileText size={14} />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'transaction': return 'bg-blue-100 text-blue-700';
+      case 'item': return 'bg-emerald-100 text-emerald-700';
+      case 'category': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-stone-100 text-stone-700';
     }
   };
 
@@ -140,7 +153,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Cari transaksi, customer, atau barang..."
+                  placeholder="Cari barang, transaksi, atau kategori..."
                   className="flex-1 text-sm text-stone-900 placeholder-stone-400 outline-none"
                 />
                 <button onClick={onClose} className="text-stone-400 hover:text-stone-600">
@@ -173,14 +186,14 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                         className="w-full px-4 py-3 flex items-center gap-3 hover:bg-stone-50 transition-colors text-left"
                       >
                         <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-500">
-                          {getIcon(result.type)}
+                          {getIcon(result.icon)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-stone-900 truncate">{result.title}</p>
                           <p className="text-xs text-stone-500">{result.subtitle}</p>
                         </div>
-                        <span className="text-xs text-stone-400 capitalize px-2 py-0.5 bg-stone-100 rounded">
-                          {result.type}
+                        <span className={`text-xs text-stone-600 capitalize px-2 py-0.5 rounded ${getTypeColor(result.type)}`}>
+                          {result.type === 'transaction' ? 'Transaksi' : result.type === 'item' ? 'Barang' : 'Kategori'}
                         </span>
                       </button>
                     ))}
