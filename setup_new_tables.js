@@ -34,7 +34,7 @@ async function setupNewTables() {
 
     // Seed default payment methods if empty
     console.log('Checking for default payments...');
-    const [rows]: any = await connection.query('SELECT COUNT(*) as count FROM payment_methods');
+    const [rows] = await connection.query('SELECT COUNT(*) as count FROM payment_methods');
     if (rows[0].count === 0) {
       console.log('Seeding default payments (Cash, Transfer, QRIS)...');
       await connection.query("INSERT INTO payment_methods (name) VALUES ('Cash'), ('Transfer'), ('QRIS')");

@@ -31,7 +31,7 @@ const main = async () => {
         `);
 
         console.log('Seeding payment methods...');
-        const [payCount]: any = await pool.query('SELECT COUNT(*) as cnt FROM payment_methods');
+        const [payCount] = await pool.query('SELECT COUNT(*) as cnt FROM payment_methods');
         if (payCount[0].cnt === 0) {
             await pool.query("INSERT INTO payment_methods (name) VALUES ('Cash'), ('Transfer'), ('QRIS')");
             console.log('Default payments seeded.');
