@@ -368,7 +368,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
 
 // Pre-hashed fallback credentials for when DB is unreachable
 const FALLBACK_USERS: Record<string, { name: string; role: string; id: number; passwordPlain: string }> = {
-  'azriel@rental.com': { id: 1, name: 'Moh. Azriel Firmansyah', role: 'admin', passwordPlain: 'admin123' },
+  'azriel@rental.com': { id: 1, name: 'Moh. Azriel Firmansson', role: 'admin', passwordPlain: 'azriel123' },
   'elza@rental.com':   { id: 2, name: 'Elza Nur Rahmah Salzabillah', role: 'owner', passwordPlain: 'owner123' },
 };
 
