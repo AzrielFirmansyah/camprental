@@ -221,7 +221,7 @@ export default function Finance() {
     }
   };
 
-  const totalIncome = filteredTransactions.reduce((sum, tx) => sum + Number(tx.totalAmount || 0), 0);
+  const totalIncome = filteredTransactions.reduce((sum, tx) => sum + Number(tx.totalAmount || 0) + Number(tx.fineAmount || 0), 0);
   const totalExpense = expenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0);
   const netProfit = totalIncome - totalExpense;
 
@@ -462,9 +462,9 @@ export default function Finance() {
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">Harga Awal</th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase hidden md:table-cell">Diskon</th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">Total</th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">Denda</th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase hidden md:table-cell">Metode</th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase">Status</th>
-                  <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase">Aksi</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-stone-200">
@@ -485,19 +485,13 @@ export default function Finance() {
                       </td>
                       <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-stone-700">{formatCurrency(Number(tx.subtotal || tx.totalAmount))}</td>
                       <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-stone-500 hidden md:table-cell">{tx.discount > 0 ? `-${tx.discount}%` : '-'}</td>
-                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">{formatCurrency(Number(tx.totalAmount))}</td>
+                       <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">{formatCurrency(Number(tx.totalAmount))}</td>
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-600">{tx.fineAmount > 0 ? formatCurrency(Number(tx.fineAmount)) : '-'}</td>
                       <td className="px-4 md:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                         <span className={`px-2 py-1 text-[10px] font-bold rounded-lg border ${getPaymentStyle(tx.paymentMethod || 'Cash')}`}>{tx.paymentMethod || 'Cash'}</span>
                       </td>
                       <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${tx.status === 'active' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-800'}`}>{tx.status}</span>
-                      </td>
-                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right">
-                        {tx.status === 'active' ? (
-                          <button onClick={() => confirmReturn(tx.id)} className="text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg border border-red-200 text-sm">Mark Returned</button>
-                        ) : (
-                          <span className="text-red-400 bg-red-50 px-3 py-1 rounded-lg border border-red-200 text-sm opacity-60">Mark Returned</span>
-                        )}
                       </td>
                     </tr>
                   ))
@@ -666,6 +660,10 @@ export default function Finance() {
                       <p className="text-xs font-bold text-stone-400 uppercase mb-1">Metode Bayar</p>
                       <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getPaymentStyle(viewData.paymentMethod || 'Cash')}`}>{viewData.paymentMethod || 'Cash'}</span>
                     </div>
+                    <div>
+                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Jaminan (Tracking ID)</p>
+                      <p className="text-sm font-bold text-stone-800">{viewData.guarantee || '-'}</p>
+                    </div>
                   </div>
                 </div>
                 <div className="bg-stone-50 rounded-2xl border border-stone-200 max-h-64 overflow-y-auto mb-6">
@@ -690,10 +688,15 @@ export default function Finance() {
                     </div>
                   )}
                 </div>
-                <div className="flex justify-between text-sm border-t border-stone-200 pt-4">
-                  <div><span className="text-stone-500">Subtotal:</span> <span className="font-medium ml-2">{formatCurrency(viewData.subtotal)}</span></div>
-                  <div><span className="text-stone-500">Discount:</span> <span className="text-red-600 font-medium ml-2">-{viewData.discount || 0}%</span></div>
-                  <div><span className="font-bold text-emerald-600">Total: {formatCurrency(viewData.totalAmount)}</span></div>
+                <div className="flex flex-col sm:flex-row justify-between text-sm border-t border-stone-200 pt-4 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex justify-between sm:block"><span className="text-stone-500">Subtotal:</span> <span className="font-medium ml-2">{formatCurrency(viewData.subtotal)}</span></div>
+                    <div className="flex justify-between sm:block"><span className="text-stone-500">Discount:</span> <span className="text-red-500 font-medium ml-2">-{viewData.discount || 0}% ({formatCurrency(viewData.discountAmount || 0)})</span></div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    {viewData.fineAmount > 0 && <div className="text-orange-600 font-bold"><span className="text-stone-400 text-[10px] uppercase mr-2 font-black">Denda:</span> {formatCurrency(viewData.fineAmount)}</div>}
+                    <div className="text-lg font-black text-emerald-600"><span className="text-stone-400 text-[10px] uppercase mr-2 font-black">Total Akhir:</span> {formatCurrency(Number(viewData.totalAmount) + Number(viewData.fineAmount || 0))}</div>
+                  </div>
                 </div>
               </div>
             </div>

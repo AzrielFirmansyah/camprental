@@ -1,23 +1,26 @@
 import { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion } from 'framer-motion';
-import { 
-  DollarSign, 
-  TrendingDown, 
-  ShoppingCart, 
+import {
+  DollarSign,
+  TrendingDown,
+  ShoppingCart,
   Package,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar
+  Calendar,
+  MessageCircle,
+  AlertCircle,
+  Clock
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { 
+import { format, differenceInDays, startOfDay } from 'date-fns';
+import {
   BarChart,
   Bar,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
@@ -107,42 +110,195 @@ export default function Dashboard() {
     }
   ];
 
+  const handleSendReminderWA = (tx: any) => {
+    if (!tx.customerPhone) {
+      alert('Nomor HP pelanggan tidak tersedia');
+      return;
+    }
+
+    // Format tanggal
+    const endDateFormatted = tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-';
+
+    const message = `Halo Kak ${tx.customerName},%0A%0AMengingatkan bahwa masa sewa alat camping di *Sewa Outdoor Sameton* akan berakhir pada tanggal *${endDateFormatted}*.%0A%0AMohon untuk mengembalikan barang sebelum jam 8 malam ya Kak. Apabila barang dikembalikan terlambat atau dalam keadaan kotor/rusak, maka akan dikenakan denda sesuai dengan ketentuan di awal.%0A%0ATerima kasih banyak atas kerjasamanya! 🙏`;
+
+    let phone = tx.customerPhone;
+    if (phone.startsWith('0')) {
+      phone = '62' + phone.substring(1);
+    }
+    phone = phone.replace(/[^0-9]/g, '');
+
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+  };
+
+  const activeRentals = transactions.filter((tx: any) => {
+    if (!tx.endDate) return false;
+
+    // Tanggal Jatuh Tempo sesuai dengan End Date dari sistem
+    const endDate = new Date(tx.endDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    // active jika hari ini <= endDate + 3 hari toleransi (H+3 maksimum tampil)
+    const maxDate = new Date(endDate);
+    maxDate.setDate(maxDate.getDate() + 3);
+
+    return new Date() <= maxDate;
+  }).sort((a: any, b: any) => {
+    const dateA = new Date(a.endDate || 0).getTime();
+    const dateB = new Date(b.endDate || 0).getTime();
+    return dateA - dateB; // asc (closest first)
+  });
+
+  const filteredTransactions = transactions.filter(tx => {
+    // Gunakan endDate jika ada, jika tidak gunakan createdAt
+    const referenceDate = tx.endDate ? new Date(tx.endDate) : (tx.createdAt ? new Date(tx.createdAt) : new Date());
+    const maxDate = new Date(referenceDate);
+    maxDate.setDate(maxDate.getDate() + 7);
+    return new Date() <= maxDate;
+  });
+
+  const filteredExpenses = expenses.filter(exp => {
+    if (!exp.date) return true;
+    const expDate = new Date(exp.date);
+    const maxDate = new Date(expDate);
+    maxDate.setDate(maxDate.getDate() + 7);
+    return new Date() <= maxDate;
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">Dashboard Overview</h1>
+    <div className="space-y-6 relative">
+      <div className="sticky -top-6 z-30 bg-stone-100 border-b border-stone-200/80 -mx-6 px-6 -mt-6 pt-6 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-stone-900">Dashboard Overview</h1>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            const TrendIcon = stat.trendIcon;
+            return (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
+                    <Icon size={24} />
+                  </div>
+                  <div className={`flex items-center gap-1 text-sm font-medium ${stat.trendColor}`}>
+                    <span>{stat.trend}</span>
+                    <TrendIcon size={16} />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-stone-500 text-sm font-medium">{stat.title}</h3>
+                  <p className="text-2xl font-bold text-stone-900 mt-1">{stat.value}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Dashboard Stats */}
+      {/* Active Rentals / Peringatan WA */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <Clock size={20} className="text-amber-500" />
+              Sewa Berjalan & Reminder
+            </h3>
+            <p className="text-sm text-stone-500 mt-0.5">Daftar pelanggan yang masih dalam masa sewa berjalan.</p>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-700 rounded-lg">
+            {activeRentals.length} Aktif
+          </span>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          const TrendIcon = stat.trendIcon;
-          return (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
-                  <Icon size={24} />
-                </div>
-                <div className={`flex items-center gap-1 text-sm font-medium ${stat.trendColor}`}>
-                  <span>{stat.trend}</span>
-                  <TrendIcon size={16} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-stone-500 text-sm font-medium">{stat.title}</h3>
-                <p className="text-2xl font-bold text-stone-900 mt-1">{stat.value}</p>
-              </div>
-            </motion.div>
-          );
-        })}
+        {activeRentals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-stone-400">
+            <AlertCircle size={36} className="mb-3 opacity-30" />
+            <p className="text-sm font-medium">Tidak ada penyewaan berjalan</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead className="bg-stone-50 border-b border-stone-100">
+                <tr className="text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                  <th className="p-3 rounded-tl-xl">Pelanggan</th>
+                  <th className="p-3">Periode</th>
+                  <th className="p-3">Sisa Waktu</th>
+                  <th className="p-3">Jaminan</th>
+                  <th className="p-3 text-right rounded-tr-xl">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100 text-sm">
+                {activeRentals.map((tx: any, idx: number) => {
+                  // Pengembalian sesuai dengan End Date yang dipilih di POS
+                  const dueDate = startOfDay(new Date(tx.endDate));
+                  const today = startOfDay(new Date());
+
+                  // daysLeft: selisih hari dari dueDate ke today
+                  // Positif = Belum jatuh tempo. 0 = Hari ini. Negatif = Terlambat.
+                  const daysLeft = differenceInDays(dueDate, today);
+
+                  let tagColor = '';
+                  let tagText = '';
+
+                  if (daysLeft < 0) {
+                    tagColor = 'bg-red-100 text-red-700';
+                    tagText = `Terlambat ${Math.abs(daysLeft)} Hari`;
+                  } else if (daysLeft === 0) {
+                    tagColor = 'bg-red-100 text-red-700';
+                    tagText = 'Jatuh Tempo Hari Ini!';
+                  } else if (daysLeft === 1) {
+                    tagColor = 'bg-orange-100 text-orange-700';
+                    tagText = 'H-1 (Besok)';
+                  } else {
+                    tagColor = 'bg-emerald-100 text-emerald-700';
+                    tagText = `${daysLeft} Hari Lagi`;
+                  }
+
+                  return (
+                    <tr key={tx.id || idx} className="hover:bg-stone-50/50 transition-colors">
+                      <td className="p-3">
+                        <div className="font-bold text-stone-800">{tx.customerName || '-'}</div>
+                        <div className="text-xs text-stone-500">{tx.customerPhone || 'Tidak ada no. HP'}</div>
+                      </td>
+                      <td className="p-3 text-stone-600">
+                        {tx.startDate ? format(new Date(tx.startDate), 'dd MMM yyyy') : '-'} s/d <br />
+                        <span className="font-medium text-stone-800">{tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-'}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${tagColor}`}>
+                          {tagText}
+                        </span>
+                      </td>
+                      <td className="p-3 sticky right-0">
+                        <span className="text-[11px] font-bold text-stone-500 uppercase bg-stone-100 px-2 py-1 rounded-lg">
+                          {tx.guarantee || '-'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => handleSendReminderWA(tx)}
+                          disabled={!tx.customerPhone}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 opacity-90 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <MessageCircle size={14} />
+                          Kirim WA
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
@@ -174,28 +330,28 @@ export default function Dashboard() {
         ) : (
           <div className="h-[320px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={data.chartData} 
+              <BarChart
+                data={data.chartData}
                 margin={{ top: 10, right: 20, left: 10, bottom: 5 }}
                 barCategoryGap="30%"
                 barGap={4}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e7e5e4" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#78716c', fontSize: 12, fontWeight: 500 }} 
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#78716c', fontSize: 12, fontWeight: 500 }}
                   dy={8}
                 />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
                   tick={{ fill: '#78716c', fontSize: 11 }}
-                  tickFormatter={(value) => `${value >= 1000000 ? `Rp ${(value/1000000).toFixed(1)}jt` : `Rp ${value/1000}k`}`}
+                  tickFormatter={(value) => `${value >= 1000000 ? `Rp ${(value / 1000000).toFixed(1)}jt` : `Rp ${value / 1000}k`}`}
                   width={75}
                 />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: 'rgba(0,0,0,0.04)', radius: 6 }}
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
@@ -291,7 +447,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {transactions.slice(0, 10).map((tx: any, idx: number) => (
+                  {filteredTransactions.slice(0, 10).map((tx: any, idx: number) => (
                     <tr key={tx.id || idx} className="border-t border-stone-100">
                       <td className="py-2.5 text-stone-600">
                         <div className="flex items-center gap-2">
@@ -317,9 +473,9 @@ export default function Dashboard() {
               <TrendingDown size={20} className="text-red-600" />
               Recent Expenses
             </h3>
-            <span className="text-xs text-stone-400">{expenses.length} items</span>
+            <span className="text-xs text-stone-400">{filteredExpenses.length} items</span>
           </div>
-          {expenses.length === 0 ? (
+          {filteredExpenses.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-stone-400">
               <TrendingDown size={32} className="mb-2 opacity-30" />
               <p className="text-sm">No expense data</p>
@@ -335,7 +491,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {expenses.slice(0, 10).map((exp: any, idx: number) => (
+                  {filteredExpenses.slice(0, 10).map((exp: any, idx: number) => (
                     <tr key={exp.id || idx} className="border-t border-stone-100">
                       <td className="py-2.5 text-stone-600">
                         <div className="flex items-center gap-2">
@@ -355,6 +511,7 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
     </div>
   );
 }

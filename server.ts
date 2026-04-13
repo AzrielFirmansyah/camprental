@@ -169,6 +169,8 @@ async function setupDatabase() {
   await addColumn('subtotal', 'DECIMAL(15,2) DEFAULT 0 AFTER durationDays');
   await addColumn('discount', 'INT DEFAULT 0 AFTER subtotal');
   await addColumn('discountAmount', 'DECIMAL(15,2) DEFAULT 0 AFTER discount');
+  await addColumn('guarantee', 'VARCHAR(255) DEFAULT NULL AFTER paymentMethod');
+  await addColumn('fineAmount', 'DECIMAL(15,2) DEFAULT 0 AFTER guarantee');
 
   // Set subtotal for old records that have subtotal=0 but totalAmount > 0
   try {
@@ -430,7 +432,7 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 });
 
 app.get('/api/categories', authenticateToken, async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM categories');
+  const [rows]: any = await pool.query('SELECT * FROM categories');
   res.json(rows);
 });
 
@@ -467,7 +469,7 @@ app.delete('/api/categories/:id', authenticateToken, requireAdmin, async (req, r
 });
 
 app.get('/api/item_statuses', authenticateToken, async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM item_statuses');
+  const [rows]: any = await pool.query('SELECT * FROM item_statuses');
   res.json(rows);
 });
 
@@ -504,7 +506,7 @@ app.delete('/api/item_statuses/:id', authenticateToken, requireAdmin, async (req
 // Discounts API
 app.get('/api/discounts', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM discounts ORDER BY percentage ASC');
+    const [rows]: any = await pool.query('SELECT * FROM discounts ORDER BY percentage ASC');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -542,7 +544,7 @@ app.delete('/api/discounts/:id', authenticateToken, requireAdmin, async (req, re
 });
 
 app.get('/api/items', authenticateToken, async (req, res) => {
-  const [rows] = await pool.query('SELECT items.*, categories.name as categoryName FROM items LEFT JOIN categories ON items.categoryId = categories.id');
+  const [rows]: any = await pool.query('SELECT items.*, categories.name as categoryName FROM items LEFT JOIN categories ON items.categoryId = categories.id');
   res.json(rows);
 });
 
@@ -556,7 +558,7 @@ app.get('/api/search', authenticateToken, async (req, res) => {
   const results: { items: any[]; transactions: any[]; categories: any[] } = { items: [], transactions: [], categories: [] };
   
   try {
-    const [items] = await pool.query(
+    const [items]: any = await pool.query(
       `SELECT items.*, categories.name as categoryName FROM items 
        LEFT JOIN categories ON items.categoryId = categories.id 
        WHERE LOWER(items.name) LIKE ? LIMIT 10`,
@@ -564,7 +566,7 @@ app.get('/api/search', authenticateToken, async (req, res) => {
     );
     results.items = items;
     
-    const [transactions] = await pool.query(
+    const [transactions]: any = await pool.query(
       `SELECT id, customerName, customerPhone, totalAmount, paymentMethod, status, startDate, endDate 
        FROM transactions 
        WHERE LOWER(customerName) LIKE ? OR customerPhone LIKE ? OR CAST(id AS CHAR) LIKE ? LIMIT 10`,
@@ -572,7 +574,7 @@ app.get('/api/search', authenticateToken, async (req, res) => {
     );
     results.transactions = transactions;
     
-    const [categories] = await pool.query(
+    const [categories]: any = await pool.query(
       `SELECT * FROM categories WHERE LOWER(name) LIKE ? LIMIT 5`,
       [searchTerm]
     );
@@ -618,7 +620,7 @@ app.put('/api/items/:id', authenticateToken, requireAdmin, async (req, res) => {
 // Payment Methods API
 app.get('/api/payment_methods', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM payment_methods ORDER BY name ASC');
+    const [rows]: any = await pool.query('SELECT * FROM payment_methods ORDER BY name ASC');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -681,7 +683,7 @@ app.get('/api/transaction_statuses', authenticateToken, async (req, res) => {
     try {
       await pool.query(`CREATE TABLE IF NOT EXISTS transaction_statuses (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL)`);
       await pool.query("INSERT INTO transaction_statuses (name) VALUES ('Aktif'), ('Dikembalikan')");
-      const [rows] = await pool.query('SELECT * FROM transaction_statuses ORDER BY id ASC');
+      const [rows]: any = await pool.query('SELECT * FROM transaction_statuses ORDER BY id ASC');
       res.json(rows);
     } catch (e) {
       res.status(500).json({ error: 'Failed to create table' });
@@ -732,7 +734,7 @@ app.delete('/api/transaction_statuses/:id', authenticateToken, requireAdmin, asy
 // Item Statuses API
 app.get('/api/item_statuses', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM item_statuses ORDER BY name ASC');
+    const [rows]: any = await pool.query('SELECT * FROM item_statuses ORDER BY name ASC');
     res.json(rows);
   } catch (err: any) {
     res.status(500).json({ error: 'Server error: ' + err.message });
@@ -823,7 +825,8 @@ app.post('/api/transactions', authenticateToken, async (req: any, res) => {
     subtotal,
     discount,
     discountAmount,
-    totalAmount
+    totalAmount,
+    guarantee
   } = req.body;
   
   const conn = await pool.getConnection();
@@ -841,8 +844,8 @@ app.post('/api/transactions', authenticateToken, async (req: any, res) => {
     const finalDiscountAmt = Number(discountAmount || 0);
 
     const [txResult]: any = await conn.query(
-      'INSERT INTO transactions (userId, customerName, customerPhone, startDate, endDate, durationDays, subtotal, discount, discountAmount, totalAmount, status, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-      [req.user.id, customerName, customerPhone, startDate, endDate, durationDays, finalSubtotal, finalDiscount, finalDiscountAmt, finalTotal, 'active', paymentMethod || 'Cash']
+      'INSERT INTO transactions (userId, customerName, customerPhone, startDate, endDate, durationDays, subtotal, discount, discountAmount, totalAmount, status, paymentMethod, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+      [req.user.id, customerName, customerPhone, startDate, endDate, durationDays, finalSubtotal, finalDiscount, finalDiscountAmt, finalTotal, 'active', paymentMethod || 'Cash', guarantee || null]
     );
     
     const txId = txResult.insertId;
@@ -864,7 +867,7 @@ app.post('/api/transactions', authenticateToken, async (req: any, res) => {
 });
 
 app.get('/api/transactions', authenticateToken, async (req, res) => {
-  const [rows] = await pool.query('SELECT transactions.*, users.name as userName FROM transactions LEFT JOIN users ON transactions.userId = users.id ORDER BY transactions.createdAt DESC');
+  const [rows]: any = await pool.query('SELECT transactions.*, users.name as userName FROM transactions LEFT JOIN users ON transactions.userId = users.id ORDER BY transactions.createdAt DESC');
   res.json(rows);
 });
 
@@ -895,9 +898,10 @@ app.post('/api/transactions/:id/return', authenticateToken, async (req, res) => 
   try {
     await conn.beginTransaction();
     const id = req.params.id;
+    const { fineAmount } = req.body;
     const [txs]: any = await conn.query('SELECT * FROM transactions WHERE id = ?', [id]);
     if (!txs[0] || txs[0].status === 'returned') throw new Error('Invalid Tx');
-    await conn.query('UPDATE transactions SET status = ? WHERE id = ?', ['returned', id]);
+    await conn.query('UPDATE transactions SET status = ?, fineAmount = ? WHERE id = ?', ['returned', Number(fineAmount || 0), id]);
     const [items]: any = await conn.query('SELECT * FROM transaction_items WHERE transactionId = ?', [id]);
     for (const item of items) {
       const [rows]: any = await conn.query('SELECT availableStock FROM items WHERE id = ?', [item.itemId]);
@@ -947,7 +951,7 @@ app.get('/api/transactions/report', authenticateToken, async (req, res) => {
     console.log('[REPORT API] Query:', query);
     console.log('[REPORT API] Params:', params);
     
-    const [rows] = await pool.query(query, params);
+    const [rows]: any = await pool.query(query, params);
     console.log('[REPORT API] Found rows:', rows.length);
     res.json(rows);
   } catch (err) {
@@ -957,7 +961,7 @@ app.get('/api/transactions/report', authenticateToken, async (req, res) => {
 });
 
 app.get('/api/finance/expenses', authenticateToken, async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM expenses ORDER BY date DESC');
+  const [rows]: any = await pool.query('SELECT * FROM expenses ORDER BY date DESC');
   res.json(rows);
 });
 
@@ -989,7 +993,7 @@ app.delete('/api/finance/expenses/:id', authenticateToken, requireAdmin, async (
 });
 
 app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
-  const [rows] = await pool.query('SELECT id, name, email, role FROM users');
+  const [rows]: any = await pool.query('SELECT id, name, email, role FROM users');
   res.json(rows);
 });
 
