@@ -120,7 +120,6 @@ async function setupDatabase() {
     // Basic connectivity test
     await pool.query('SELECT 1');
     console.log('✅ [DB] MySQL Connection Established Successfully!');
-    console.log(`✅ [DB] Pool ready state: ${pool.pool?._allustrings?.length || 'unknown'}`);
   } catch (err: any) {
     console.error('❌ [DB] Skipping Database Setup: Database unreachable.', err.message);
     return; // STOP HERE but don't crash

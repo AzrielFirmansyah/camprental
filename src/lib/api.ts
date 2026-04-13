@@ -18,8 +18,9 @@ export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   });
   
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'An error occurred' }));
-    throw new Error(error.error || 'An error occurred');
+    const error = await response.json().catch(() => ({ error: 'An error occurred', status: response.status, url: response.url }));
+    console.error(`[API Error] ${endpoint}:`, error);
+    throw new Error(error.error || `Error ${response.status}: ${response.statusText}`);
   }
 
   return response.json();
@@ -42,8 +43,9 @@ export const uploadImage = async (endpoint: string, file: File, additionalData: 
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'An error occurred' }));
-    throw new Error(error.error || 'An error occurred');
+    const error = await response.json().catch(() => ({ error: 'An error occurred', status: response.status }));
+    console.error(`[API Error] ${endpoint}:`, error);
+    throw new Error(error.error || `Error ${response.status}: ${response.statusText}`);
   }
 
   return response.json();
