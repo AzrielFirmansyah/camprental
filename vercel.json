@@ -19,6 +19,10 @@
       "dest": "/server.ts"
     },
     {
+      "src": "/uploads/(.*)",
+      "dest": "/server.ts"
+    },
+    {
       "src": "/logo.png",
       "dest": "/logo.png"
     },
