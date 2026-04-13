@@ -102,6 +102,7 @@ async function setupDatabase() {
   }
 
   console.log(`[DB] Connecting to ${dbHost}:${dbPort} / ${dbName}...`);
+  console.log(`[DB] Using Railway: ${!!(process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL || process.env.RAILWAY_MYSQL_HOST)}`);
   pool = mysql.createPool({
     host: dbHost,
     port: dbPort,
@@ -119,6 +120,7 @@ async function setupDatabase() {
     // Basic connectivity test
     await pool.query('SELECT 1');
     console.log('✅ [DB] MySQL Connection Established Successfully!');
+    console.log(`✅ [DB] Pool ready state: ${pool.pool?._allustrings?.length || 'unknown'}`);
   } catch (err: any) {
     console.error('❌ [DB] Skipping Database Setup: Database unreachable.', err.message);
     return; // STOP HERE but don't crash
@@ -375,13 +377,16 @@ const FALLBACK_USERS: Record<string, { name: string; role: string; id: number; p
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   console.log(`[LOGIN] Attempt: ${email}`);
+  console.log(`[LOGIN] Pool exists: ${!!pool}`);
 
   // --- Try DB login first ---
   try {
     if (pool) {
       const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      console.log(`[LOGIN] Query result rows: ${rows?.length || 0}`);
       const user = rows[0];
       if (user) {
+        console.log(`[LOGIN] User found in DB: ${user.email}, role: ${user.role}`);
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
           console.warn(`[LOGIN] Invalid Password: ${email}`);
@@ -392,13 +397,15 @@ app.post('/api/auth/login', async (req, res) => {
         return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
       }
       // Email not found in DB — fall through to fallback check
+      console.log(`[LOGIN] Email not found in DB, trying fallback...`);
     }
   } catch (err: any) {
     // DB unreachable — fall through to fallback
-    console.warn(`[LOGIN] DB unavailable (${err.code || err.message}), trying fallback credentials...`);
+    console.warn(`[LOGIN] DB error (${err.code || err.message}), trying fallback credentials...`);
   }
 
   // --- Fallback: check hardcoded credentials ---
+  console.log(`[LOGIN] Checking fallback for: ${email}`);
   const fallback = FALLBACK_USERS[email];
   if (fallback && password === fallback.passwordPlain) {
     const userPayload = { id: fallback.id, email, role: fallback.role, name: fallback.name };
@@ -407,7 +414,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.json({ token, user: userPayload });
   }
 
-  console.warn(`[LOGIN] Failed for: ${email}`);
+  console.warn(`[LOGIN] Failed for: ${email} - fallback not matched`);
   return res.status(400).json({ error: 'Email atau password salah' });
 });
 
