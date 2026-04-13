@@ -277,7 +277,7 @@ export default function POS() {
     const itemsText = tx.items.map((i: any) => `- ${i.name} (x${i.quantity}) = Rp ${(i.price * i.quantity).toLocaleString('id-ID')}`).join('%0A');
     const discountText = tx.discount > 0 ? `%0ADiskon (${tx.discount}%): -Rp ${tx.discountAmount.toLocaleString('id-ID')}` : '';
     const jaminanText = tx.guarantee ? `%0AJaminan: ${tx.guarantee}` : '';
-    const message = `Halo Kak ${tx.customerName},%0A%0ATerima kasih telah menyewa alat camping di *Sewa Outdoor Sameton*.%0A%0A*Rincian Sewa:*%0ATanggal: ${format(new Date(tx.startDate), 'dd MMM yyyy')} s/d ${format(new Date(tx.endDate), 'dd MMM yyyy')} (${tx.durationDays} hari)%0A%0A*Item:*%0A${itemsText}${discountText}${jaminanText}%0A%0A*Total Bayar:* Rp ${tx.totalAmount.toLocaleString('id-ID')}%0AMetode Bayar: ${tx.paymentMethod}%0A%0A_Semoga petualangan Anda menyenangkan! 😊_`;
+    const message = `Halo Kak ${tx.customerName},%0A%0ATerima kasih telah menyewa alat camping di *Sewa Outdoor Sameton Tulangan Sidoarjo*.%0A%0A*Rincian Sewa:*%0ATanggal: ${format(new Date(tx.startDate), 'dd MMM yyyy')} s/d ${format(new Date(tx.endDate), 'dd MMM yyyy')} (${tx.durationDays} hari)%0A%0A*Item:*%0A${itemsText}${discountText}${jaminanText}%0A%0A*Total Bayar:* Rp ${tx.totalAmount.toLocaleString('id-ID')}%0AMetode Bayar: ${tx.paymentMethod}%0A%0A_Semoga petualangan Anda menyenangkan!😊_`;
     let phone = tx.customerPhone;
     if (phone.startsWith('0')) phone = '62' + phone.substring(1);
     phone = phone.replace(/[^0-9]/g, '');
@@ -352,7 +352,11 @@ export default function POS() {
                       className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm cursor-pointer group hover:border-emerald-500 transition-all flex flex-col"
                     >
                       <div className="w-full aspect-square bg-stone-50 rounded-xl mb-3 flex items-center justify-center text-stone-300 relative overflow-hidden">
-                        <PackageCheck size={48} className="transition-transform group-hover:scale-110" />
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <PackageCheck size={48} className="transition-transform group-hover:scale-110" />
+                        )}
                         <span className="absolute top-2 right-2 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg uppercase">
                           Stok: {item.availableStock}
                         </span>

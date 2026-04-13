@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-// createViteServer removed from static imports for Vercel stability
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,50 @@ const PORT = 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-rental-app';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Error handler for multer
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    console.error('[Multer Error]:', err.message);
+    return res.status(400).json({ error: err.message });
+  } else if (err) {
+    console.error('[Upload Error]:', err.message);
+    return res.status(400).json({ error: err.message });
+  }
+  next();
+});
+
+// Multer configuration for image uploads (jpg, png, max 10MB)
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const fileFilter = (req: any, file: any, cb: any) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+  if (extname && mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files (jpg, png, gif, webp) are allowed'));
+  }
+};
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter
+});
+app.use('/uploads', express.static(uploadsDir));
 
 // Database Pool configuration for MySQL (Laragon)
 let pool: mysql.Pool;
@@ -124,9 +168,26 @@ async function setupDatabase() {
       totalStock INT NOT NULL,
       availableStock INT NOT NULL,
       status VARCHAR(50) NOT NULL DEFAULT 'Ada',
+      image VARCHAR(500),
       FOREIGN KEY (categoryId) REFERENCES categories(id)
     )
   `);
+
+  // Migration: Add image column to items if it doesn't exist
+  try {
+    await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS image VARCHAR(500)`);
+  } catch (err: any) {
+    if (!err.message.includes('Duplicate column name')) {
+      try {
+        await pool.query(`ALTER TABLE items ADD image VARCHAR(500)`);
+        console.log('Column image added to items table.');
+      } catch (e: any) {
+        if (!e.message.includes('Duplicate column name')) {
+          console.warn('Migration items image:', e.message);
+        }
+      }
+    }
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -586,32 +647,57 @@ app.get('/api/search', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/items', authenticateToken, requireAdmin, async (req, res) => {
+app.post('/api/items', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   const { name, categoryId, dailyPrice, weeklyPrice, totalStock } = req.body;
+  console.log('[DEBUG] POST /api/items received:', { name, hasFile: !!req.file, fileName: req.file?.filename });
   try {
     const parsedStock = parseInt(totalStock);
     const status = computeItemStatus(parsedStock);
-    const [result]: any = await pool.query('INSERT INTO items (name, categoryId, dailyPrice, weeklyPrice, totalStock, availableStock, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [name, categoryId, dailyPrice, weeklyPrice, parsedStock, parsedStock, status]);
-    res.json({ id: result.insertId, message: 'Item created' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    console.log('[DEBUG] Image path:', imagePath);
+    const [result]: any = await pool.query(
+      'INSERT INTO items (name, categoryId, dailyPrice, weeklyPrice, totalStock, availableStock, status, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, categoryId, dailyPrice, weeklyPrice, parsedStock, parsedStock, status, imagePath]
+    );
+    console.log('[DEBUG] Item created with ID:', result.insertId);
+    res.json({ id: result.insertId, message: 'Item created', imagePath });
+  } catch (err: any) {
+    console.error('[DEBUG] POST /api/items error:', err.message);
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 
-app.put('/api/items/:id', authenticateToken, requireAdmin, async (req, res) => {
-  const { name, categoryId, dailyPrice, weeklyPrice, totalStock } = req.body;
+app.put('/api/items/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { name, categoryId, dailyPrice, weeklyPrice, totalStock, deleteImage } = req.body;
   const id = req.params.id;
   try {
     const parsedStock = parseInt(totalStock);
     const catId = categoryId ? parseInt(categoryId) : null;
-    const [rows]: any = await pool.query('SELECT totalStock, availableStock FROM items WHERE id = ?', [id]);
+    const [rows]: any = await pool.query('SELECT totalStock, availableStock, image FROM items WHERE id = ?', [id]);
     const currentItem = rows[0];
     if (!currentItem) return res.status(404).json({ error: 'Data tidak ditemukan' });
     const diff = parsedStock - currentItem.totalStock;
     const newAvailable = Math.max(0, currentItem.availableStock + diff);
     const status = computeItemStatus(newAvailable);
-    await pool.query('UPDATE items SET name = ?, categoryId = ?, dailyPrice = ?, weeklyPrice = ?, totalStock = ?, availableStock = ?, status = ? WHERE id = ?', [name, catId, dailyPrice, weeklyPrice, parsedStock, newAvailable, status, id]);
-    res.json({ message: 'Berhasil diupdate' });
+    
+    let imagePath = currentItem.image;
+    if (req.file) {
+      // New image uploaded
+      imagePath = `/uploads/${req.file.filename}`;
+    } else if (deleteImage === 'true' && currentItem.image) {
+      // Delete existing image
+      try {
+        const fullPath = path.join(__dirname, 'public', currentItem.image);
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+      } catch (e) {}
+      imagePath = null;
+    }
+    
+    await pool.query(
+      'UPDATE items SET name = ?, categoryId = ?, dailyPrice = ?, weeklyPrice = ?, totalStock = ?, availableStock = ?, status = ?, image = ? WHERE id = ?',
+      [name, catId, dailyPrice, weeklyPrice, parsedStock, newAvailable, status, imagePath, id]
+    );
+    res.json({ message: 'Berhasil diupdate', imagePath });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -1060,6 +1146,8 @@ app.put('/api/auth/change-password', authenticateToken, async (req: any, res: an
 async function startServer() {
   await setupDatabase();
   if (process.env.NODE_ENV !== 'production') {
+    // Serve uploads before Vite middleware
+    app.use('/uploads', express.static(uploadsDir));
     const { createServer } = await import('vite');
     const vite = await createServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
@@ -1068,6 +1156,9 @@ async function startServer() {
     app.use(express.static(distPath));
     app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
-  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://localhost:${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Uploads available at http://localhost:${PORT}/uploads`);
+  });
 }
 startServer();

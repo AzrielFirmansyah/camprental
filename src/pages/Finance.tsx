@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, TrendingDown, TrendingUp, Plus, Calendar, FileText, ChevronDown, Download, CheckCircle2, Trash2, Eye, ArrowLeft, ArrowRight, User, Filter } from 'lucide-react';
+import { DollarSign, TrendingDown, TrendingUp, Plus, Calendar, FileText, ChevronDown, Download, CheckCircle2, Trash2, Eye, ArrowLeft, ArrowRight, User, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -556,150 +556,298 @@ export default function Finance() {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Improved Add Expense Modal */}
       {isExpenseModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900/75" onClick={() => setIsExpenseModalOpen(false)}></div>
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full z-10">
-              <form onSubmit={handleExpenseSubmit}>
-                <div className="p-6">
-                  <h3 className="text-lg font-medium text-stone-900 mb-4">Add Operational Expense</h3>
-                  <div className="space-y-4">
-                    <div><label className="block text-sm font-medium text-stone-700">Description</label><input type="text" required value={expenseForm.description} onChange={(e) => setExpenseForm({...expenseForm, description: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-emerald-500" placeholder="e.g. Electricity Bill" /></div>
-                    <div><label className="block text-sm font-medium text-stone-700">Amount</label><input type="number" required value={expenseForm.amount} onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-emerald-500" placeholder="50000" /></div>
-                    <div><label className="block text-sm font-medium text-stone-700">Date</label><input type="date" required value={expenseForm.date} onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})} className="mt-1 block w-full border border-stone-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-emerald-500" /></div>
+            <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm" onClick={() => setIsExpenseModalOpen(false)}></div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full z-10 overflow-hidden"
+            >
+              <div className="bg-gradient-to-br from-red-500 to-red-600 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 rounded-2xl">
+                      <DollarSign className="text-white" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-white tracking-tight">TAMBAH PENGELUARAN</h3>
+                      <p className="text-red-100 text-xs font-medium">Catat pengeluaran operasional</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsExpenseModalOpen(false)} className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+              <form onSubmit={handleExpenseSubmit} className="p-6 space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Deskripsi</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={expenseForm.description} 
+                    onChange={(e) => setExpenseForm({...expenseForm, description: e.target.value})}
+                    placeholder="Contoh: Listrik, Air, Gas"
+                    className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-red-500 focus:bg-red-50/50 transition-all" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Jumlah</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">Rp</span>
+                    <input 
+                      type="number" 
+                      required 
+                      value={expenseForm.amount} 
+                      onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
+                      placeholder="50000"
+                      className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl text-sm font-bold text-stone-700 focus:outline-none focus:border-red-500 focus:bg-red-50/50 transition-all" 
+                    />
                   </div>
                 </div>
-                <div className="bg-stone-50 px-6 py-3 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsExpenseModalOpen(false)} className="px-4 py-2 text-stone-700 hover:bg-stone-100 rounded-xl">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">Save</button>
+                <div>
+                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Tanggal</label>
+                  <input 
+                    type="date" 
+                    required 
+                    value={expenseForm.date} 
+                    onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})}
+                    className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-red-500 focus:bg-red-50/50 transition-all" 
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsExpenseModalOpen(false)} 
+                    className="flex-1 py-3.5 bg-white border-2 border-stone-200 text-stone-500 font-black rounded-2xl hover:bg-stone-50 transition-colors"
+                  >
+                    BATAL
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="flex-1 py-3.5 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 shadow-lg shadow-red-500/20 active:scale-95 transition-all"
+                  >
+                    SIMPAN
+                  </button>
                 </div>
               </form>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
 
+      {/* Improved Return Confirm Modal */}
       {returnModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900/75" onClick={() => setReturnModalOpen(false)}></div>
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full z-10">
-              <div className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-full"><CheckCircle2 className="h-6 w-6 text-red-600" /></div>
-                  <h3 className="text-lg font-medium text-stone-900">Confirm Return</h3>
+            <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm" onClick={() => setReturnModalOpen(false)}></div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full z-10 overflow-hidden"
+            >
+              <div className="bg-gradient-to-br from-amber-500 to-orange-500 px-6 py-5 text-center">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="text-white" size={32} />
                 </div>
-                <p className="mt-4 text-stone-500">Apakah Anda menyetujui bahwa barang telah dikembalikan? Stok akan otomatis dikembalikan ke inventaris.</p>
+                <h3 className="text-xl font-black text-white tracking-tight">KONFIRMASI KEMBALI</h3>
+                <p className="text-amber-100 text-xs font-medium mt-1">Stok akan dikembalikan ke inventaris</p>
               </div>
-              <div className="bg-stone-50 px-6 py-3 flex justify-end gap-3">
-                <button onClick={() => setReturnModalOpen(false)} className="px-4 py-2 text-stone-700 hover:bg-stone-100 rounded-xl">Cancel</button>
-                <button onClick={executeReturn} disabled={submitting} className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50">{submitting ? 'Processing...' : 'Confirm'}</button>
+              <div className="p-6">
+                <p className="text-stone-600 text-sm text-center mb-6">
+                  Apakah Anda menyetujui bahwa barang telah dikembalikan? Stok barang akan otomatis ditambahkan ke inventaris.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setReturnModalOpen(false)} 
+                    className="flex-1 py-3.5 bg-white border-2 border-stone-200 text-stone-500 font-black rounded-2xl hover:bg-stone-50 transition-colors"
+                  >
+                    BATAL
+                  </button>
+                  <button 
+                    onClick={executeReturn} 
+                    disabled={submitting} 
+                    className="flex-1 py-3.5 bg-orange-500 text-white font-black rounded-2xl hover:bg-orange-600 shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {submitting ? 'Memproses...' : 'KONFIRMASI'}
+                  </button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
 
+      {/* Improved Delete Expense Modal */}
       {deleteExpenseModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900/75" onClick={() => setDeleteExpenseModalOpen(false)}></div>
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full z-10">
-              <div className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-full"><Trash2 className="h-6 w-6 text-red-600" /></div>
-                  <h3 className="text-lg font-medium text-stone-900">Delete Expense</h3>
+            <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm" onClick={() => setDeleteExpenseModalOpen(false)}></div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full z-10 overflow-hidden"
+            >
+              <div className="bg-gradient-to-br from-stone-800 to-stone-900 px-6 py-5 text-center">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="text-red-500" size={32} />
                 </div>
-                <p className="mt-4 text-stone-500">Apakah Anda yakin ingin menghapus pengeluaran ini?</p>
+                <h3 className="text-xl font-black text-white tracking-tight">HAPUS PENGELUARAN</h3>
+                <p className="text-stone-400 text-xs font-medium mt-1">Data yang dihapus tidak dapat dipulihkan</p>
               </div>
-              <div className="bg-stone-50 px-6 py-3 flex justify-end gap-3">
-                <button onClick={() => setDeleteExpenseModalOpen(false)} className="px-4 py-2 text-stone-700 hover:bg-stone-100 rounded-xl">Cancel</button>
-                <button onClick={executeDeleteExpense} disabled={submitting} className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50">{submitting ? 'Deleting...' : 'Delete'}</button>
+              <div className="p-6">
+                <p className="text-stone-600 text-sm text-center mb-6">
+                  Apakah Anda yakin ingin menghapus pengeluaran ini? Tindakan ini tidak dapat dibatalkan.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setDeleteExpenseModalOpen(false)} 
+                    className="flex-1 py-3.5 bg-white border-2 border-stone-200 text-stone-500 font-black rounded-2xl hover:bg-stone-50 transition-colors"
+                  >
+                    BATAL
+                  </button>
+                  <button 
+                    onClick={executeDeleteExpense} 
+                    disabled={submitting} 
+                    className="flex-1 py-3.5 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {submitting ? 'Menghapus...' : 'HAPUS'}
+                  </button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
 
+      {/* Improved Detail View Modal */}
       {isViewModalOpen && viewData && (
         <div className="fixed inset-0 z-[70] overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setIsViewModalOpen(false)}></div>
-            <div className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full z-10">
-              <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 text-white">
-                  <div className="p-2 bg-white/20 rounded-xl"><FileText size={20} /></div>
-                  <div><h3 className="text-lg font-bold">Detail Transaksi</h3><p className="text-xs text-emerald-100">#INV-{viewData.id}</p></div>
+            <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={() => setIsViewModalOpen(false)}></div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full z-10 overflow-hidden"
+            >
+              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 rounded-2xl">
+                      <FileText className="text-white" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-white tracking-tight">DETAIL TRANSAKSI</h3>
+                      <p className="text-emerald-100 text-xs font-medium">Invoice #{viewData.id}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsViewModalOpen(false)} className="p-2.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors">
+                    <X size={20} />
+                  </button>
                 </div>
-                <button onClick={() => setIsViewModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl text-white"><ArrowLeft size={20} /></button>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Pelanggan</p>
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-stone-100 rounded-lg"><User size={14} /></div>
-                        <div><p className="text-sm font-bold text-stone-800">{viewData.customerName}</p><p className="text-xs text-stone-500">{viewData.customerPhone}</p></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-emerald-100 rounded-xl">
+                        <User className="text-emerald-600" size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Pelanggan</p>
+                        <p className="text-sm font-black text-stone-800">{viewData.customerName}</p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Status Sewa</p>
-                      <span className={`px-2 text-xs font-semibold rounded-full ${viewData.status === 'active' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-800'}`}>{viewData.status}</span>
-                    </div>
+                    <p className="text-xs text-stone-500 font-medium ml-11">{viewData.customerPhone}</p>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Waktu Sewa</p>
-                      <p className="text-sm font-medium text-stone-700">{format(new Date(viewData.startDate), 'dd MMM')} - {format(new Date(viewData.endDate), 'dd MMM yyyy')}</p>
-                      <p className="text-xs text-emerald-600 font-bold">{viewData.durationDays} Hari</p>
+                  <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-xl">
+                          <Calendar className="text-blue-600" size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Waktu Sewa</p>
+                          <p className="text-sm font-black text-stone-800">{viewData.durationDays} Hari</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg ${viewData.status === 'active' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'}`}>
+                        {viewData.status === 'active' ? 'AKTIF' : 'SELESAI'}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Metode Bayar</p>
-                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getPaymentStyle(viewData.paymentMethod || 'Cash')}`}>{viewData.paymentMethod || 'Cash'}</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase mb-1">Jaminan (Tracking ID)</p>
-                      <p className="text-sm font-bold text-stone-800">{viewData.guarantee || '-'}</p>
-                    </div>
+                    <p className="text-xs text-stone-500 font-medium ml-11">
+                      {format(new Date(viewData.startDate), 'dd MMM')} - {format(new Date(viewData.endDate), 'dd MMM yyyy')}
+                    </p>
                   </div>
                 </div>
-                <div className="bg-stone-50 rounded-2xl border border-stone-200 max-h-64 overflow-y-auto mb-6">
-                  {viewData.items && viewData.items.length > 0 ? (
-                    <table className="min-w-full divide-y divide-stone-200">
-                      <thead className="bg-stone-100 sticky top-0">
-                        <tr><th className="px-4 py-2 text-left text-xs font-bold text-stone-500">Barang</th><th className="px-4 py-2 text-center text-xs font-bold text-stone-500">Qty</th><th className="px-4 py-2 text-right text-xs font-bold text-stone-500">Subtotal</th></tr>
-                      </thead>
-                      <tbody className="divide-y divide-stone-200">
-                        {viewData.items.map((item: any) => (
-                          <tr key={item.id}>
-                            <td className="px-4 py-2 text-sm text-stone-800">{item.itemName || item.name || '-'}</td>
-                            <td className="px-4 py-2 text-sm text-stone-600 text-center">{item.quantity}</td>
-                            <td className="px-4 py-2 text-sm font-medium text-stone-800 text-right">{formatCurrency(item.price)}</td>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-stone-50 rounded-xl p-3 border border-stone-100">
+                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Metode Bayar</p>
+                    <span className={`px-2.5 py-1.5 text-[10px] font-black rounded-lg border ${getPaymentStyle(viewData.paymentMethod || 'Cash')}`}>
+                      {viewData.paymentMethod || 'Cash'}
+                    </span>
+                  </div>
+                  <div className="bg-stone-50 rounded-xl p-3 border border-stone-100">
+                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Jaminan</p>
+                    <p className="text-sm font-black text-stone-800">{viewData.guarantee || '-'}</p>
+                  </div>
+                </div>
+                <div className="mb-6">
+                  <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-3">Rincian Barang</p>
+                  <div className="bg-stone-50 rounded-2xl border-2 border-stone-100 max-h-48 overflow-y-auto">
+                    {viewData.items && viewData.items.length > 0 ? (
+                      <table className="min-w-full">
+                        <thead className="bg-stone-100 sticky top-0">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left text-[10px] font-black text-stone-500 uppercase">Barang</th>
+                            <th className="px-4 py-2.5 text-center text-[10px] font-black text-stone-500 uppercase">Qty</th>
+                            <th className="px-4 py-2.5 text-right text-[10px] font-black text-stone-500 uppercase">Subtotal</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="p-8 text-center text-stone-400">
-                      <p className="text-sm">Tidak ada data barang</p>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100">
+                          {viewData.items.map((item: any, idx: number) => (
+                            <tr key={idx}>
+                              <td className="px-4 py-3 text-sm font-bold text-stone-800">{item.itemName || item.name || '-'}</td>
+                              <td className="px-4 py-3 text-sm font-bold text-stone-600 text-center">{item.quantity}</td>
+                              <td className="px-4 py-3 text-sm font-black text-stone-800 text-right">{formatCurrency(item.price)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="p-8 text-center text-stone-400">
+                        <p className="text-sm font-bold">Tidak ada data barang</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-stone-50 rounded-2xl p-4 border-2 border-stone-100">
+                  <div className="flex justify-between items-center text-sm mb-2">
+                    <span className="text-stone-500 font-bold">Subtotal</span> 
+                    <span className="font-bold text-stone-800">{formatCurrency(viewData.subtotal)}</span>
+                  </div>
+                  {viewData.discount > 0 && (
+                    <div className="flex justify-between items-center text-sm mb-2">
+                      <span className="text-stone-500 font-bold">Diskon ({viewData.discount}%)</span> 
+                      <span className="font-bold text-red-500">-{formatCurrency(viewData.discountAmount || 0)}</span>
                     </div>
                   )}
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between text-sm border-t border-stone-200 pt-4 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex justify-between sm:block"><span className="text-stone-500">Subtotal:</span> <span className="font-medium ml-2">{formatCurrency(viewData.subtotal)}</span></div>
-                    <div className="flex justify-between sm:block"><span className="text-stone-500">Discount:</span> <span className="text-red-500 font-medium ml-2">-{viewData.discount || 0}% ({formatCurrency(viewData.discountAmount || 0)})</span></div>
-                  </div>
-                  <div className="text-right space-y-1">
-                    {viewData.fineAmount > 0 && <div className="text-orange-600 font-bold"><span className="text-stone-400 text-[10px] uppercase mr-2 font-black">Denda:</span> {formatCurrency(viewData.fineAmount)}</div>}
-                    <div className="text-lg font-black text-emerald-600"><span className="text-stone-400 text-[10px] uppercase mr-2 font-black">Total Akhir:</span> {formatCurrency(Number(viewData.totalAmount) + Number(viewData.fineAmount || 0))}</div>
+                  {viewData.fineAmount > 0 && (
+                    <div className="flex justify-between items-center text-sm mb-2">
+                      <span className="text-stone-500 font-bold">Denda</span> 
+                      <span className="font-bold text-orange-600">{formatCurrency(viewData.fineAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-stone-200">
+                    <span className="text-sm font-black text-stone-800 uppercase tracking-wider">Total Akhir</span> 
+                    <span className="text-xl font-black text-emerald-600">{formatCurrency(Number(viewData.totalAmount) + Number(viewData.fineAmount || 0))}</span>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}

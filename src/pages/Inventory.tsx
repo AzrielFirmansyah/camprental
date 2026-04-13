@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { fetchApi } from '../lib/api';
+import React, { useEffect, useState, useRef } from 'react';
+import { fetchApi, uploadImage } from '../lib/api';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Search, ChevronDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ChevronDown, Image as ImageIcon, X } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
 export default function Inventory() {
@@ -26,6 +26,11 @@ export default function Inventory() {
     weeklyPrice: '',
     totalStock: ''
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImage, setExistingImage] = useState<string | null>(null);
+  const [deleteImage, setDeleteImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -94,20 +99,50 @@ export default function Inventory() {
         ...formData,
         categoryId: parseInt(formData.categoryId) || null
       };
+      
       if (editingItem) {
-        await fetchApi(`/items/${editingItem.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload)
-        });
+        if (imageFile) {
+          const formDataPayload = new FormData();
+          formDataPayload.append('image', imageFile);
+          Object.entries(payload).forEach(([key, value]) => {
+            formDataPayload.append(key, String(value));
+          });
+          await fetchApi(`/items/${editingItem.id}`, {
+            method: 'PUT',
+            body: formDataPayload
+          });
+        } else {
+          const updatePayload = { ...payload, deleteImage: deleteImage ? 'true' : 'false' };
+          await fetchApi(`/items/${editingItem.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updatePayload)
+          });
+        }
       } else {
-        await fetchApi('/items', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
+        if (imageFile) {
+          const formDataPayload = new FormData();
+          formDataPayload.append('image', imageFile);
+          Object.entries(payload).forEach(([key, value]) => {
+            formDataPayload.append(key, String(value));
+          });
+          await fetchApi('/items', {
+            method: 'POST',
+            body: formDataPayload
+          });
+        } else {
+          await fetchApi('/items', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+        }
       }
       setIsModalOpen(false);
       setEditingItem(null);
       setFormData({ name: '', categoryId: '', dailyPrice: '', weeklyPrice: '', totalStock: '' });
+      setImageFile(null);
+      setImagePreview(null);
+      setExistingImage(null);
+      setDeleteImage(false);
       loadData();
     } catch (error: any) {
       console.error('Failed to save item', error);
@@ -149,6 +184,9 @@ export default function Inventory() {
         weeklyPrice: item.weeklyPrice?.toString() || '',
         totalStock: item.totalStock?.toString() || ''
       });
+      setExistingImage(item.image || null);
+      setImagePreview(null);
+      setDeleteImage(false);
     } else {
       setEditingItem(null);
       setFormData({
@@ -158,8 +196,43 @@ export default function Inventory() {
         weeklyPrice: '',
         totalStock: ''
       });
+      setExistingImage(null);
+      setImagePreview(null);
+      setDeleteImage(false);
     }
+    setImageFile(null);
     setIsModalOpen(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Only jpg, png, gif, and webp files are allowed');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setDeleteImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    if (existingImage) {
+      setDeleteImage(true);
+    } else {
+      setExistingImage(null);
+    }
   };
 
   const filteredItems = items.filter(item =>
@@ -344,38 +417,65 @@ export default function Inventory() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Improved Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setIsModalOpen(false)}>
-              <div className="absolute inset-0 bg-stone-900 opacity-75"></div>
+              <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm"></div>
             </div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="relative z-10 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative z-10 inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full"
+            >
               <form onSubmit={handlePreSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <h3 className="text-lg leading-6 font-medium text-stone-900 mb-4">
-                    {editingItem ? 'Edit Item' : 'Add New Item'}
-                  </h3>
-                  <div className="space-y-4">
+                <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-5">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 rounded-2xl">
+                      {editingItem ? <Edit className="text-white" size={24} /> : <Plus className="text-white" size={24} />}
+                    </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700">Item Name</label>
-                      <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                      <h3 className="text-xl font-black text-white tracking-tight">
+                        {editingItem ? 'EDIT ITEM' : 'TAMBAH ITEM'}
+                      </h3>
+                      <p className="text-emerald-100 text-xs font-medium">{editingItem ? 'Perbarui data barang' : 'Tambah barang baru ke inventaris'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 py-5 space-y-5">
+                  <div className="grid grid-cols-1 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Nama Item</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                        placeholder="Contoh: Tenda 4 Orang"
+                        className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
+                      />
                     </div>
                     <div className="relative">
-                      <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
+                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Kategori</label>
                       <button
                         type="button"
                         onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                        className="w-full flex items-center justify-between px-3 py-2 border border-stone-300 rounded-xl bg-white text-sm font-medium text-stone-700 hover:border-emerald-500 transition-all focus:ring-2 focus:ring-emerald-200"
+                        className="w-full flex items-center justify-between px-4 py-3 border-2 border-stone-200 rounded-2xl bg-white text-sm font-bold text-stone-700 hover:border-emerald-500 transition-all focus:ring-2 focus:ring-emerald-200"
                       >
                         <span className="truncate">
-                          {categories.find(c => c.id.toString() === formData.categoryId.toString())?.name || 'Select Category'}
+                          {categories.find(c => c.id.toString() === formData.categoryId.toString())?.name || 'Pilih Kategori'}
                         </span>
                         <ChevronDown size={18} className={`text-stone-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
-
                       <AnimatePresence>
                         {isCategoryDropdownOpen && (
                           <>
@@ -384,9 +484,9 @@ export default function Inventory() {
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -10 }}
-                              className="absolute z-[70] w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden"
+                              className="absolute z-[70] w-full mt-2 bg-white border-2 border-stone-100 rounded-2xl shadow-2xl overflow-hidden"
                             >
-                              <div className="max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-stone-200">
+                              <div className="max-h-48 overflow-y-auto p-1">
                                 {categories.map((c) => (
                                   <button
                                     key={c.id}
@@ -395,13 +495,13 @@ export default function Inventory() {
                                       setFormData({ ...formData, categoryId: c.id });
                                       setIsCategoryDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${formData.categoryId.toString() === c.id.toString() ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-stone-600 hover:bg-stone-50'}`}
+                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${formData.categoryId.toString() === c.id.toString() ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600 hover:bg-stone-50'}`}
                                   >
                                     {c.name}
                                   </button>
                                 ))}
                                 {categories.length === 0 && (
-                                  <div className="px-3 py-2.5 text-sm text-stone-400 italic">No categories found</div>
+                                  <div className="px-4 py-3 text-sm text-stone-400 italic">Tidak ada kategori</div>
                                 )}
                               </div>
                             </motion.div>
@@ -411,38 +511,109 @@ export default function Inventory() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-stone-700">Daily Price</label>
-                        <input type="number" required value={formData.dailyPrice} onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Harga Harian</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">Rp</span>
+                          <input 
+                            type="number" 
+                            required 
+                            value={formData.dailyPrice} 
+                            onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })} 
+                            className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-stone-700">Weekly Price</label>
-                        <input type="number" required value={formData.weeklyPrice} onChange={(e) => setFormData({ ...formData, weeklyPrice: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Harga Mingguan</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">Rp</span>
+                          <input 
+                            type="number" 
+                            required 
+                            value={formData.weeklyPrice} 
+                            onChange={(e) => setFormData({ ...formData, weeklyPrice: e.target.value })} 
+                            className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-stone-700">Total Stock</label>
-                        <input type="number" required value={formData.totalStock} onChange={(e) => setFormData({ ...formData, totalStock: e.target.value })} className="mt-1 block w-full border border-stone-300 rounded-xl shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
+                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Total Stok</label>
+                        <input 
+                          type="number" 
+                          required 
+                          value={formData.totalStock} 
+                          onChange={(e) => setFormData({ ...formData, totalStock: e.target.value })} 
+                          className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-stone-700">Status (Automatic)</label>
-                        <div className="mt-1 block w-full border border-stone-200 bg-stone-50 rounded-xl py-2 px-3 text-stone-500 text-sm font-medium">
+                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Status</label>
+                        <div className={`w-full border-2 border-stone-100 rounded-2xl py-3 px-4 text-sm font-black uppercase ${Number(formData.totalStock) <= 0 ? 'bg-red-50 text-red-600' : Number(formData.totalStock) <= 3 ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
                           {Number(formData.totalStock) <= 0 ? 'Habis' : Number(formData.totalStock) <= 3 ? 'Menipis' : 'Ada'}
                         </div>
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Gambar Item (JPG/PNG, max 10MB)</label>
+                      <div className="flex items-center gap-4">
+                        {(imagePreview || existingImage) && !deleteImage ? (
+                          <div className="relative">
+                            <img 
+                              src={imagePreview || existingImage || ''} 
+                              alt="Preview" 
+                              className="w-24 h-24 object-cover rounded-2xl border-2 border-emerald-200 shadow-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-24 h-24 border-2 border-dashed border-stone-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
+                          >
+                            <ImageIcon size={24} className="text-stone-400" />
+                            <span className="text-[10px] text-stone-400 font-bold mt-1">Upload</span>
+                          </div>
+                        )}
+                        {!imagePreview && !existingImage && (
+                          <p className="text-xs text-stone-400">Klik kotak di atas untuk upload gambar</p>
+                        )}
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="bg-stone-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button type="submit" disabled={submitting} className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                    {submitting ? 'Saving...' : 'Save'}
+                <div className="px-6 py-4 bg-stone-50 flex gap-3 border-t border-stone-100">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsModalOpen(false)} 
+                    className="flex-1 py-3.5 bg-white border-2 border-stone-200 text-stone-500 font-black rounded-2xl hover:bg-stone-50 transition-colors"
+                  >
+                    BATAL
                   </button>
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-xl border border-stone-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Cancel
+                  <button 
+                    type="submit" 
+                    disabled={submitting} 
+                    className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {submitting ? 'MENYIMPAN...' : 'SIMPAN'}
                   </button>
                 </div>
               </form>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
