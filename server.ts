@@ -31,9 +31,18 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // Multer configuration for image uploads (jpg, png, max 10MB)
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+let uploadsDir: string;
+try {
+  uploadsDir = path.join(__dirname, 'public', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('[UPLOAD] Cannot create uploads directory, using temp directory');
+  uploadsDir = '/tmp/uploads';
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 }
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -59,7 +68,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter
 });
-app.use('/uploads', express.static(uploadsDir));
+// app.use('/uploads', express.static(uploadsDir)); // Moved to production only
 
 // Database Pool configuration for MySQL (Laragon)
 let pool: mysql.Pool;
@@ -1160,6 +1169,12 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
+    // Try to serve uploads in production (may fail but that's okay for now)
+    try {
+      app.use('/uploads', express.static(uploadsDir));
+    } catch (e) {
+      console.log('[UPLOAD] Upload directory not available in production');
+    }
     app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
   app.listen(PORT, '0.0.0.0', () => {
