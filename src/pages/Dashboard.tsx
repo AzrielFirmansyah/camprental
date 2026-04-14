@@ -119,7 +119,7 @@ export default function Dashboard() {
     // Format tanggal
     const endDateFormatted = tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-';
 
-    const message = `Halo Kak ${tx.customerName},%0A%0AMengingatkan bahwa masa sewa alat camping di *Sewa Outdoor Sameton* akan berakhir pada tanggal *${endDateFormatted}*.%0A%0AMohon untuk mengembalikan barang sebelum jam 8 malam ya Kak. Apabila barang dikembalikan terlambat atau dalam keadaan kotor/rusak, maka akan dikenakan denda sesuai dengan ketentuan di awal.%0A%0ATerima kasih banyak atas kerjasamanya! 🙏`;
+    const message = `Halo Kak ${tx.customerName},%0A%0AMengingatkan bahwa masa sewa alat camping di *Sewa Outdoor Sameton Tulangan Sidoarjo* akan berakhir pada tanggal *${endDateFormatted}*.%0A%0AMohon untuk mengembalikan barang sebelum jam 8 malam ya Kak. Apabila barang dikembalikan terlambat atau dalam keadaan kotor/rusak, maka akan dikenakan denda sesuai dengan ketentuan di awal.%0A%0ATerima kasih banyak atas kerjasamanya! 🙏`;
 
     let phone = tx.customerPhone;
     if (phone.startsWith('0')) {

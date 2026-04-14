@@ -492,7 +492,7 @@ export default function POS() {
                       <span className="text-xl font-black text-emerald-600 tracking-tight">{formatCurrency(totalAmount)}</span>
                     </div>
                     <button type="submit" disabled={submitting || cart.length === 0} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                      {submitting ? 'MEMPROSES...' : '🔥 CHECKOUT RENTAL'}
+                      {submitting ? 'MEMPROSES...' : 'CHECKOUT RENTAL'}
                     </button>
                   </div>
                 </form>
