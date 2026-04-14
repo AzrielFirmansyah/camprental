@@ -167,8 +167,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 relative">
       <div className="sticky -top-6 z-30 bg-stone-100 border-b border-stone-200/80 -mx-6 px-6 -mt-6 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-stone-900">Dashboard Overview</h1>
+        <div className="flex flex-col gap-2 md:gap-4">
+          <h1 className="text-lg md:text-2xl font-black text-stone-900 tracking-tight uppercase">DASHBOARD</h1>
+          <p className="text-[10px] md:text-sm text-stone-500 font-bold uppercase tracking-widest hidden sm:block">Overview Sistem Sewa Outdoor Sameton</p>
         </div>
 
         {/* Dashboard Stats */}
@@ -182,20 +183,20 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-stone-200"
+                className="bg-white p-3 md:p-6 rounded-2xl shadow-sm border border-stone-200"
               >
                 <div className="flex items-center justify-between">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
-                    <Icon size={24} />
+                  <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
+                    <Icon size={isMobile ? 16 : 24} />
                   </div>
-                  <div className={`flex items-center gap-1 text-sm font-medium ${stat.trendColor}`}>
+                  <div className={`flex items-center gap-1 text-[10px] md:text-xs font-black ${stat.trendColor} bg-stone-50 px-1.5 py-0.5 rounded-lg uppercase tracking-tighter`}>
                     <span>{stat.trend}</span>
-                    <TrendIcon size={16} />
+                    <TrendIcon size={isMobile ? 10 : 12} />
                   </div>
                 </div>
-                <div className="mt-4">
-                  <h3 className="text-stone-500 text-sm font-medium">{stat.title}</h3>
-                  <p className="text-2xl font-bold text-stone-900 mt-1">{stat.value}</p>
+                <div className="mt-2 md:mt-4">
+                  <h3 className="text-stone-500 text-[9px] md:text-sm font-black uppercase tracking-tight">{stat.title}</h3>
+                  <p className="text-xs md:text-2xl font-black text-stone-900 mt-0.5">{stat.value}</p>
                 </div>
               </motion.div>
             );
@@ -204,16 +205,16 @@ export default function Dashboard() {
       </div>
 
       {/* Active Rentals / Peringatan WA */}
-      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-stone-200">
+      <div className="bg-white p-3 md:p-6 rounded-2xl shadow-sm border border-stone-200">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <Clock size={20} className="text-amber-500" />
+            <h3 className="text-sm md:text-lg font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight">
+              <Clock size={isMobile ? 16 : 20} className="text-amber-500" />
               Sewa Berjalan &amp; Reminder
             </h3>
-            <p className="text-sm text-stone-500 mt-0.5">Daftar pelanggan yang masih dalam masa sewa berjalan.</p>
+            <p className="text-[10px] md:text-sm text-stone-500 mt-0.5 font-medium hidden sm:block">Daftar pelanggan yang masih dalam masa sewa berjalan.</p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-700 rounded-lg">
+          <span className="text-[9px] md:text-xs font-black px-2 py-1 bg-amber-100 text-amber-700 rounded-lg uppercase">
             {activeRentals.length} Aktif
           </span>
         </div>
@@ -238,24 +239,24 @@ export default function Dashboard() {
                 else if (daysLeft === 1) { tagColor = 'bg-orange-100 text-orange-700'; tagText = 'H-1 (Besok)'; }
                 else { tagColor = 'bg-emerald-100 text-emerald-700'; tagText = `${daysLeft} Hari Lagi`; }
                 return (
-                  <div key={tx.id || idx} className="bg-stone-50 rounded-2xl p-4 border border-stone-100">
+                  <div key={tx.id || idx} className="bg-stone-50 rounded-xl p-3 border border-stone-100">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-bold text-stone-800 text-sm">{tx.customerName || '-'}</p>
-                        <p className="text-xs text-stone-500">{tx.customerPhone || 'Tidak ada no. HP'}</p>
+                        <p className="font-black text-stone-900 text-xs uppercase tracking-tight">{tx.customerName || '-'}</p>
+                        <p className="text-[10px] text-stone-500 font-bold">{tx.customerPhone || 'Tidak ada no. HP'}</p>
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${tagColor}`}>{tagText}</span>
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${tagColor}`}>{tagText}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-stone-500">
-                        {tx.startDate ? format(new Date(tx.startDate), 'dd MMM') : '-'} s/d {tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-'}
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-200/50">
+                      <p className="text-[9px] text-stone-400 font-bold uppercase">
+                        {tx.startDate ? format(new Date(tx.startDate), 'dd MMM') : '-'} — {tx.endDate ? format(new Date(tx.endDate), 'dd MMM') : '-'}
                       </p>
                       <button
                         onClick={() => handleSendReminderWA(tx)}
                         disabled={!tx.customerPhone}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 disabled:opacity-50"
                       >
-                        <MessageCircle size={12} /> WA
+                        <MessageCircle size={10} /> WhatsApp
                       </button>
                     </div>
                   </div>
@@ -323,20 +324,20 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-white p-3 md:p-6 rounded-2xl shadow-sm border border-stone-200">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
           <div>
-            <h3 className="text-lg font-bold text-stone-900">Financial Overview</h3>
-            <p className="text-sm text-stone-500 mt-0.5">Perbandingan Pemasukan vs Pengeluaran per Bulan</p>
+            <h3 className="text-sm md:text-lg font-black text-stone-900 uppercase tracking-tight">Financial Overview</h3>
+            <p className="text-[10px] md:text-sm text-stone-500 mt-0.5 font-medium hidden sm:block">Perbandingan Pemasukan vs Pengeluaran per Bulan</p>
           </div>
-          <div className="flex gap-4">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
-              <span className="text-xs font-medium text-stone-600">Income</span>
+          <div className="flex gap-2 md:gap-4">
+            <div className="flex items-center gap-1">
+              <span className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-emerald-500 inline-block"></span>
+              <span className="text-[9px] md:text-xs font-bold text-stone-600 uppercase tracking-tighter">Income</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-red-400 inline-block"></span>
-              <span className="text-xs font-medium text-stone-600">Expense</span>
+            <div className="flex items-center gap-1">
+              <span className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-red-400 inline-block"></span>
+              <span className="text-[9px] md:text-xs font-bold text-stone-600 uppercase tracking-tighter">Expense</span>
             </div>
           </div>
         </div>

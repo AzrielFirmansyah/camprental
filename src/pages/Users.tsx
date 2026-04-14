@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Search, UserPlus, Users as UsersIcon, Mail, Shield, Key } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, UserPlus, Users as UsersIcon, Mail, Shield, Key, X } from 'lucide-react';
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
@@ -185,81 +185,61 @@ export default function Users() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900 opacity-75" onClick={() => setIsModalOpen(false)}></div>
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
-              <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                      <UserPlus size={20} />
-                    </div>
-                    <h3 className="text-xl font-bold text-stone-900">
-                      {editingItem ? 'Edit User' : 'Add New User'}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1 px-1">Full Name</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <UsersIcon size={16} className="text-stone-400" />
-                        </div>
-                        <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="block w-full pl-9 pr-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 bg-stone-50" placeholder="e.g. Budi Santoso" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1 px-1">Email Address</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Mail size={16} className="text-stone-400" />
-                        </div>
-                        <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="block w-full pl-9 pr-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 bg-stone-50" placeholder="email@example.com" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1 px-1">Role & Access</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Shield size={16} className="text-stone-400" />
-                        </div>
-                        <select required value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="block w-full pl-9 pr-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 bg-stone-50">
-                          <option value="staff">Staff (Standard Access)</option>
-                          <option value="owner">Owner (Full View Access)</option>
-                          <option value="admin">Admin (System Manager)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1 px-1">
-                        {editingItem ? 'New Password (Leave blank to keep same)' : 'Create Password'}
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Key size={16} className="text-stone-400" />
-                        </div>
-                        <input required={!editingItem} type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="block w-full pl-9 pr-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 bg-stone-50" placeholder="••••••••" />
-                      </div>
-                    </div>
-                  </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="bg-emerald-600 p-5 relative">
+              <button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <UserPlus className="text-white" size={20} />
                 </div>
-
-                <div className="bg-stone-50 p-6 flex flex-col sm:flex-row-reverse gap-3 border-t border-stone-100">
-                  <button type="submit" className="w-full sm:w-auto px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-sm">
-                    {editingItem ? 'Save Changes' : 'Create Account'}
-                  </button>
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-8 py-3 bg-white text-stone-600 border border-stone-200 rounded-xl font-medium hover:bg-stone-50 transition-colors">
-                    Cancel
-                  </button>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight uppercase leading-none">
+                    {editingItem ? 'EDIT USER' : 'TAMBAH USER'}
+                  </h3>
+                  <p className="text-emerald-100 text-[9px] font-bold uppercase tracking-widest mt-1 opacity-80">{editingItem ? 'Perbarui akses pengguna' : 'Pengguna Sistem Baru'}</p>
                 </div>
-              </form>
+              </div>
             </div>
-          </div>
+            
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Nama Lengkap</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all" placeholder="e.g. Budi Santoso" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Alamat Email</label>
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all" placeholder="email@example.com" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Role & Akses</label>
+                  <select required value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all appearance-none">
+                    <option value="staff">Staff (Standard)</option>
+                    <option value="owner">Owner (View Only)</option>
+                    <option value="admin">Admin (System Manager)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">{editingItem ? 'Password Baru' : 'Buat Password'}</label>
+                  <input required={!editingItem} type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all" placeholder="••••••••" />
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-stone-400 font-black text-[10px] uppercase tracking-widest">BATAL</button>
+                <button type="submit" className="flex-[2] py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                  {editingItem ? 'SIMPAN PERUBAHAN' : 'BUAT AKUN'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
     </div>

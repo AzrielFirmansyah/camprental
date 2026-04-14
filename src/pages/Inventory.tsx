@@ -298,37 +298,37 @@ export default function Inventory() {
   return (
     <div className="flex flex-col h-auto md:h-full space-y-6 md:overflow-hidden pb-20 md:pb-0">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-30 bg-stone-100 pt-1 flex flex-col gap-4">
+      <div className="sticky -top-4 z-30 bg-stone-100 flex flex-col gap-4 py-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-stone-900">Inventory Management</h1>
+          <h1 className="text-lg md:text-2xl font-black text-stone-900 tracking-tight uppercase">Inventory</h1>
           {isAdmin && (
             <button
               onClick={() => openModal()}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
+              className="flex items-center gap-2 bg-emerald-600 text-white px-3 md:px-4 py-2 rounded-lg md:rounded-xl hover:bg-emerald-700 transition-all font-black text-[10px] md:text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20"
             >
-              <Plus size={20} />
-              <span>Add Item</span>
+              <Plus size={isMobile ? 14 : 20} />
+              <span>Tambah Item</span>
             </button>
           )}
         </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col flex-1 min-h-0">
-        <div className="p-4 border-b border-stone-200 sticky top-0 bg-white z-20">
+        
+        <div className="bg-white p-2.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-stone-200">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-stone-400" />
+              <Search size={isMobile ? 16 : 18} className="text-stone-400" />
             </div>
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder="Cari barang..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-stone-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-stone-50 transition-all"
+              className="block w-full pl-10 pr-3 py-2 border border-stone-100 bg-stone-50 rounded-lg md:rounded-xl focus:ring-emerald-500 focus:border-emerald-500 text-xs md:text-sm uppercase font-black"
             />
           </div>
         </div>
+      </div>
 
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col flex-1 min-h-0 overflow-hidden">
         <div className="flex-1 overflow-auto">
           {/* Mobile: Card Grid */}
           {isMobile ? (
@@ -345,36 +345,36 @@ export default function Inventory() {
                       key={item.id}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-stone-50 rounded-2xl border border-stone-200 p-4 flex gap-3 items-center"
+                      className="bg-stone-50 rounded-xl border border-stone-200 p-3 flex gap-3 items-center"
                     >
                       {/* Image */}
-                      <div className="w-16 h-16 rounded-xl bg-white border border-stone-100 flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-white border border-stone-100 flex items-center justify-center overflow-hidden shrink-0">
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-8 h-8 rounded-lg bg-stone-200 flex items-center justify-center">
-                            <span className="text-stone-500 font-black text-sm">{item.name?.charAt(0)}</span>
+                            <span className="text-stone-500 font-black text-xs">{item.name?.charAt(0)}</span>
                           </div>
                         )}
                       </div>
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-stone-900 text-sm truncate uppercase">{item.name}</p>
-                        <p className="text-xs text-stone-400 truncate">{item.categoryName}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-xs font-black text-emerald-600">{formatCurrency(item.dailyPrice)}<span className="font-normal text-stone-400">/hr</span></span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.colors}`}>{status.text}</span>
+                        <p className="font-black text-stone-900 text-xs truncate uppercase tracking-tight">{item.name}</p>
+                        <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{item.categoryName}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-black text-emerald-600">{formatCurrency(item.dailyPrice)}</span>
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-lg uppercase tracking-wider ${status.colors}`}>{status.text}</span>
                         </div>
-                        <p className="text-[11px] text-stone-500 mt-0.5">Stok: <span className={item.availableStock < 3 ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>{item.availableStock}</span>/{item.totalStock}</p>
+                        <p className="text-[9px] text-stone-500 mt-0.5 font-bold">Stok: <span className={item.availableStock < 3 ? 'text-red-600 font-black' : 'text-emerald-600 font-black'}>{item.availableStock}</span> / {item.totalStock}</p>
                       </div>
                       {/* Actions */}
                       {isAdmin && (
-                        <div className="flex flex-col gap-1.5 shrink-0">
-                          <button onClick={() => openModal(item)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors">
-                            <Edit size={15} />
+                        <div className="flex flex-col gap-1 shrink-0">
+                          <button onClick={() => openModal(item)} className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <Edit size={12} />
                           </button>
-                          <button onClick={() => confirmDelete(item.id)} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
-                            <Trash2 size={15} />
+                          <button onClick={() => confirmDelete(item.id)} className="p-2 bg-red-50 text-red-500 rounded-lg">
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       )}
@@ -482,248 +482,125 @@ export default function Inventory() {
 
       {/* Improved Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setIsModalOpen(false)}>
-              <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm"></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-sm md:max-w-md shadow-2xl overflow-hidden"
+          >
+            <div className="bg-emerald-600 p-5 md:p-6 relative">
+              <button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  {editingItem ? <Edit className="text-white" size={20} /> : <Plus className="text-white" size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight uppercase leading-none">
+                    {editingItem ? 'EDIT ITEM' : 'TAMBAH ITEM'}
+                  </h3>
+                  <p className="text-emerald-100 text-[9px] font-bold uppercase tracking-widest mt-1 opacity-80">{editingItem ? 'Perbarui data barang' : 'Item Inventaris Baru'}</p>
+                </div>
+              </div>
             </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="relative z-10 inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full"
-            >
-              <form onSubmit={handlePreSubmit}>
-                <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-5">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+            
+            <form onSubmit={handlePreSubmit} className="p-5 md:p-6 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Nama Item</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={formData.name} 
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                    placeholder="Contoh: Tenda 4 Orang"
+                    className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all" 
+                  />
+                </div>
+                <div className="relative">
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Kategori</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 border border-stone-100 bg-stone-50 rounded-xl text-sm font-bold text-stone-700 hover:border-emerald-500 transition-all"
                   >
-                    <X size={20} />
+                    <span className="truncate">
+                      {categories.find(c => c.id.toString() === formData.categoryId.toString())?.name || 'Pilih Kategori'}
+                    </span>
+                    <ChevronDown size={16} className={`text-stone-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-white/20 rounded-2xl">
-                      {editingItem ? <Edit className="text-white" size={24} /> : <Plus className="text-white" size={24} />}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black text-white tracking-tight">
-                        {editingItem ? 'EDIT ITEM' : 'TAMBAH ITEM'}
-                      </h3>
-                      <p className="text-emerald-100 text-xs font-medium">{editingItem ? 'Perbarui data barang' : 'Tambah barang baru ke inventaris'}</p>
-                    </div>
+                  <AnimatePresence>
+                    {isCategoryDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[60]" onClick={() => setIsCategoryDropdownOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="absolute z-[70] w-full mt-1 bg-white border border-stone-100 shadow-xl rounded-xl overflow-hidden p-1"
+                        >
+                          <div className="max-h-40 overflow-y-auto">
+                            {categories.map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, categoryId: c.id });
+                                  setIsCategoryDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${formData.categoryId.toString() === c.id.toString() ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600 hover:bg-stone-50'}`}
+                              >
+                                {c.name}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Harga / Hari</label>
+                    <input type="number" required value={formData.dailyPrice} onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })} className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-sm font-black text-emerald-600 focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Stok Total</label>
+                    <input type="number" required value={formData.totalStock} onChange={(e) => setFormData({ ...formData, totalStock: e.target.value })} className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-sm font-black text-stone-700 focus:outline-none focus:border-emerald-500" />
                   </div>
                 </div>
-                <div className="px-6 py-5 space-y-5">
-                  <div className="grid grid-cols-1 gap-5">
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Nama Item</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                        placeholder="Contoh: Tenda 4 Orang"
-                        className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
-                      />
-                    </div>
-                    <div className="relative">
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Kategori</label>
-                      <button
-                        type="button"
-                        onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                        className="w-full flex items-center justify-between px-4 py-3 border-2 border-stone-200 rounded-2xl bg-white text-sm font-bold text-stone-700 hover:border-emerald-500 transition-all focus:ring-2 focus:ring-emerald-200"
-                      >
-                        <span className="truncate">
-                          {categories.find(c => c.id.toString() === formData.categoryId.toString())?.name || 'Pilih Kategori'}
-                        </span>
-                        <ChevronDown size={18} className={`text-stone-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      <AnimatePresence>
-                        {isCategoryDropdownOpen && (
-                          <>
-                            <div className="fixed inset-0 z-[60]" onClick={() => setIsCategoryDropdownOpen(false)} />
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="absolute z-[70] w-full mt-2 bg-white border-2 border-stone-100 rounded-2xl shadow-2xl overflow-hidden"
-                            >
-                              <div className="max-h-48 overflow-y-auto p-1">
-                                {categories.map((c) => (
-                                  <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setFormData({ ...formData, categoryId: c.id });
-                                      setIsCategoryDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${formData.categoryId.toString() === c.id.toString() ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600 hover:bg-stone-50'}`}
-                                  >
-                                    {c.name}
-                                  </button>
-                                ))}
-                                {categories.length === 0 && (
-                                  <div className="px-4 py-3 text-sm text-stone-400 italic">Tidak ada kategori</div>
-                                )}
-                              </div>
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Harga Harian</label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">Rp</span>
-                          <input 
-                            type="number" 
-                            required 
-                            value={formData.dailyPrice} 
-                            onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })} 
-                            className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Harga Mingguan</label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">Rp</span>
-                          <input 
-                            type="number" 
-                            required 
-                            value={formData.weeklyPrice} 
-                            onChange={(e) => setFormData({ ...formData, weeklyPrice: e.target.value })} 
-                            className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Total Stok</label>
-                        <input 
-                          type="number" 
-                          required 
-                          value={formData.totalStock} 
-                          onChange={(e) => setFormData({ ...formData, totalStock: e.target.value })} 
-                          className="w-full border-2 border-stone-200 rounded-2xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 focus:bg-emerald-50/50 transition-all" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Status</label>
-                        <div className={`w-full border-2 border-stone-100 rounded-2xl py-3 px-4 text-sm font-black uppercase ${Number(formData.totalStock) <= 0 ? 'bg-red-50 text-red-600' : Number(formData.totalStock) <= 3 ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                          {Number(formData.totalStock) <= 0 ? 'Habis' : Number(formData.totalStock) <= 3 ? 'Menipis' : 'Ada'}
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Gambar Item (JPG/PNG, max 10MB)</label>
-                      <div className="flex items-center gap-4">
-                        {(imagePreview || existingImage) && !deleteImage ? (
-                          <div className="relative">
-                            <img 
-                              src={imagePreview || existingImage || ''} 
-                              alt="Preview" 
-                              className="w-24 h-24 object-cover rounded-2xl border-2 border-emerald-200 shadow-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleRemoveImage}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-24 h-24 border-2 border-dashed border-stone-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
-                          >
-                            <ImageIcon size={24} className="text-stone-400" />
-                            <span className="text-[10px] text-stone-400 font-bold mt-1">Upload</span>
-                          </div>
-                        )}
-                        {!imagePreview && !existingImage && (
-                          <p className="text-xs text-stone-400">Klik kotak di atas untuk upload gambar</p>
-                        )}
-                      </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/gif,image/webp"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="px-6 py-4 bg-stone-50 flex gap-3 border-t border-stone-100">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsModalOpen(false)} 
-                    className="flex-1 py-3.5 bg-white border-2 border-stone-200 text-stone-500 font-black rounded-2xl hover:bg-stone-50 transition-colors"
-                  >
-                    BATAL
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={submitting} 
-                    className="flex-1 py-3.5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    {submitting ? 'MENYIMPAN...' : 'SIMPAN'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-stone-400 font-black text-[10px] uppercase tracking-widest">BATAL</button>
+                <button type="submit" disabled={submitting} className="flex-[2] py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                  {submitting ? 'PROSES...' : 'SIMPAN ITEM'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setDeleteModalOpen(false)}>
-              <div className="absolute inset-0 bg-stone-900 opacity-75"></div>
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[28px] w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 size={32} /></div>
+              <h3 className="text-xl font-black text-stone-900 uppercase tracking-tighter mb-2">Hapus Item?</h3>
+              <p className="text-xs text-stone-500 leading-relaxed font-bold uppercase tracking-wider">Tindakan ini permanen. Item yang dipilih akan dihapus dari sistem.</p>
             </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="relative z-10 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <Trash2 className="h-6 w-6 text-red-600" aria-hidden="true" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-medium text-stone-900">Delete Item</h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-stone-500">
-                        Apakah Anda yakin ingin menghapus item ini dari inventaris? Data yang dihapus tidak dapat dipulihkan.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-stone-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={executeDelete}
-                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                >
-                  {submitting ? 'Deleting...' : 'Delete'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteModalOpen(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-xl border border-stone-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="p-4 bg-stone-50 flex gap-3 border-t border-stone-100">
+              <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-3 text-stone-400 font-black text-[10px] uppercase tracking-widest">BATAL</button>
+              <button onClick={executeDelete} disabled={submitting} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">HAPUS</button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 

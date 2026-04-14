@@ -15,7 +15,9 @@ import {
   Key,
   Search,
   Bell,
-  FileText
+  FileText,
+  MoreHorizontal,
+  Settings
 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import GlobalSearch from './GlobalSearch';
@@ -36,6 +38,7 @@ export default function Layout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { unreadCount, addNotification } = useNotifications();
   const [lowStockChecked, setLowStockChecked] = useState(false);
@@ -136,68 +139,7 @@ export default function Layout() {
   const filteredNavItems = user?.role === 'admin' ? adminNavItems.filter(item => user && item.roles.includes(user.role)) : ownerNavItems.filter(item => user && item.roles.includes(user.role));
 
   return (
-    <div className="flex h-screen bg-stone-100 font-sans text-stone-900">
-      {/* Mobile Overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-      )}
-
-      {/* Mobile Sidebar */}
-      {isMobile && (
-        <motion.div
-          initial={{ x: -280 }}
-          animate={{ x: mobileMenuOpen ? 0 : -280 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed left-0 top-0 h-full w-64 bg-stone-900 text-stone-100 z-50 shadow-2xl"
-        >
-          <div className="p-5 pt-5 border-b border-stone-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-black text-white leading-tight uppercase tracking-wide" style={{ letterSpacing: '0.1em' }}>Sewa Outdoor</h1>
-                <p className="text-base font-bold text-emerald-400 uppercase tracking-widest mt-1">Sameton</p>
-              </div>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-stone-800 rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-          </div>
-          <nav className="p-3 space-y-1">
-            {filteredNavItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive ? 'bg-emerald-600 text-white shadow-lg' : 'text-stone-400 hover:bg-stone-800 hover:text-white'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-stone-800">
-            <div className="flex items-center gap-3 mb-3 px-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center font-bold text-white">
-                {user?.name?.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-                <p className="text-xs text-stone-400 capitalize">{user?.role}</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
-              <LogOut size={18} />
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
-        </motion.div>
-      )}
-
+    <div className="flex h-screen bg-stone-100 font-sans text-stone-900 overflow-hidden">
       {/* Responsive Sidebar: icon-only for tablet, full for laptop */}
       {!isMobile && (isTablet || isSidebarOpen) && (
         <aside
@@ -248,77 +190,105 @@ export default function Layout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <header className="bg-white border-b border-stone-200 h-14 md:h-16 flex items-center justify-between px-3 md:px-6">
+        <header className="bg-white border-b border-stone-200 h-14 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 z-50">
           <div className="flex items-center gap-2">
             {!isTablet && (
-              <button
-                onClick={() => isMobile ? setMobileMenuOpen(true) : setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 rounded-lg hover:bg-stone-100 text-stone-600 transition-colors"
-              >
-                {isMobile ? <Menu size={24} /> : (isSidebarOpen ? <X size={20} /> : <Menu size={20} />)}
-              </button>
-            )}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors text-stone-400 hover:text-stone-600"
-            >
-              <Search size={16} />
-              <span className="text-xs">Cari...</span>
-              <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-stone-100 rounded border border-stone-200 font-mono">
-                <span className="text-[10px]">⌘</span>K
-              </kbd>
-            </button>
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <div className="relative">
-                <button className="p-2 rounded-lg hover:bg-stone-100 text-stone-600 transition-colors relative">
-                  <Bell size={20} />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+              <div className="flex items-center gap-2.5">
+                <img src="/logo.png" alt="Logo" className="w-8 h-8 md:w-9 md:h-9 object-contain rounded-lg shadow-sm" />
+                <div className="flex flex-col">
+                  <p className="text-[9px] font-black text-emerald-600 leading-none uppercase tracking-widest">Sewa Outdoor</p>
+                  <h2 className="text-[11px] font-black text-stone-900 uppercase tracking-tight truncate leading-tight">Sameton</h2>
+                </div>
               </div>
             )}
-            {/* User Menu - Hide on mobile when sidebar is open */}
             {!isMobile && (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors text-stone-400 hover:text-stone-600 ml-4"
+              >
+                <Search size={16} />
+                <span className="text-xs">Cari...</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            {isMobile ? (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                  className="flex items-center gap-2 p-1 bg-stone-50 border border-stone-200 rounded-2xl active:scale-95 transition-all"
+                >
+                  <div className="text-right pr-1">
+                    <p className="text-[10px] font-black text-stone-900 uppercase leading-none">{user?.name}</p>
+                    <p className="text-[9px] font-bold text-emerald-600 uppercase mt-0.5">{user?.role}</p>
+                  </div>
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-xs">
+                    {user?.name?.charAt(0)}
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isAccountMenuOpen && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="fixed inset-0 z-40 bg-stone-900/10 backdrop-blur-[1px]"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-52 bg-white rounded-[24px] shadow-2xl border border-stone-200 z-50 overflow-hidden py-2 px-2"
+                      >
+                        <button 
+                          onClick={() => { setShowPasswordModal(true); setIsAccountMenuOpen(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-stone-600 hover:bg-stone-50 rounded-xl transition-colors font-black text-[10px] uppercase tracking-widest"
+                        >
+                          <Settings size={16} />
+                          <span>Password</span>
+                        </button>
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors font-black text-[10px] uppercase tracking-widest border-t border-stone-50 mt-1"
+                        >
+                          <LogOut size={16} />
+                          <span>Logout</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
               <div className="relative z-50">
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsUserMenuOpen(!isUserMenuOpen); }}
-                  className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-stone-100 transition-all"
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-stone-100 transition-all border border-transparent hover:border-stone-200"
                 >
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs md:text-sm font-bold text-white">
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-stone-800">{user?.name}</p>
+                    <p className="text-xs text-emerald-600 font-bold uppercase">{user?.role}</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-500/20">
                     {user?.name?.charAt(0)}
                   </div>
-                  <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-semibold text-stone-800">{user?.name}</span>
-                    <span className="text-xs text-stone-400 capitalize">{user?.role}</span>
-                  </div>
-                  <ChevronDown size={16} className={`text-stone-400 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
-
                 <AnimatePresence>
                   {isUserMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50 p-2"
                       >
-                        <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
-                          <p className="text-xs text-stone-500">Logged in as</p>
-                          <p className="text-sm font-semibold text-stone-800 truncate">{user?.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-600 hover:bg-stone-50">
-                            <Key size={16} /> <span>Change Password</span>
-                          </button>
-                          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-stone-100">
-                            <LogOut size={16} /> <span>Logout</span>
-                          </button>
-                        </div>
+                         <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-stone-600 hover:bg-stone-50 rounded-xl">
+                           <Key size={16} /> <span>Ganti Password</span>
+                         </button>
+                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl border-t border-stone-50 mt-1">
+                           <LogOut size={16} /> <span>Logout Sesi</span>
+                         </button>
                       </motion.div>
                     </>
                   )}
@@ -328,17 +298,15 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className={`flex-1 overflow-auto p-3 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+        <div className="flex-1 overflow-auto p-4 md:p-6 pb-24 md:pb-6 relative scroll-smooth">
           <Outlet />
         </div>
       </main>
 
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-
       {/* Mobile Bottom Tab Bar */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200 z-40 flex items-center justify-around px-1">
-          {filteredNavItems.slice(0, 5).map((item) => {
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-stone-200 z-[60] flex items-center justify-around px-1 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+          {filteredNavItems.slice(0, 4).map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
             return (
@@ -350,55 +318,59 @@ export default function Layout() {
                 }`}
               >
                 <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-50' : ''}`}>
-                  <Icon size={21} />
+                  <Icon size={18} />
                 </div>
-                <span className="text-[9px] font-bold leading-none">
+                <span className="text-[8px] font-black uppercase tracking-tighter leading-none">
                   {item.label === 'POS / Rental' ? 'POS' : item.label}
                 </span>
               </Link>
             );
           })}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-stone-400"
+          >
+            <div className="p-1.5 rounded-xl">
+              <MoreHorizontal size={18} />
+            </div>
+            <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Top</span>
+          </button>
         </nav>
       )}
 
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
       {/* Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm" onClick={() => !submitting && setShowPasswordModal(false)}></div>
-            <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-stone-200">
-              <form onSubmit={handleChangePassword}>
-                <div className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-2xl"><Key size={24} /></div>
-                    <h3 className="text-xl font-black text-stone-900">Security</h3>
-                  </div>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Current Password</label>
-                      <input required type="password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500" placeholder="••••••••" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">New Password</label>
-                      <input required type="password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500" placeholder="••••••••" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Confirm New Password</label>
-                      <input required type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500" placeholder="••••••••" />
-                    </div>
-                  </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[28px] w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-black text-stone-900 uppercase tracking-tighter">Ganti Password</h3>
+                <button onClick={() => setShowPasswordModal(false)} className="p-1.5 text-stone-300 hover:text-stone-900 transition-colors"><X size={18} /></button>
+              </div>
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Password Sekarang</label>
+                  <input required type="password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} className="w-full px-4 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500" />
                 </div>
-                <div className="bg-stone-50 p-6 flex flex-col gap-3 border-t border-stone-100">
-                  <button type="submit" disabled={submitting} className="w-full py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 disabled:opacity-50">
-                    {submitting ? 'Verifying...' : 'Update Password'}
-                  </button>
-                  <button type="button" onClick={() => setShowPasswordModal(false)} className="w-full py-3 text-stone-400 text-xs font-bold hover:text-stone-600">
-                    Back to Dashboard
+                <div>
+                  <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Password Baru</label>
+                  <input required type="password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} className="w-full px-4 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Konfirmasi Password Baru</label>
+                  <input required type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} className="w-full px-4 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div className="pt-2 flex gap-3">
+                  <button type="button" onClick={() => setShowPasswordModal(false)} className="flex-1 py-3 text-stone-400 font-black text-[10px] uppercase tracking-widest">Batal</button>
+                  <button type="submit" disabled={submitting} className="flex-[2] py-3 bg-stone-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                    {submitting ? 'PROSES...' : 'GANTI PASSWORD'}
                   </button>
                 </div>
               </form>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
