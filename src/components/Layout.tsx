@@ -34,6 +34,7 @@ export default function Layout() {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { unreadCount, addNotification } = useNotifications();
@@ -41,9 +42,12 @@ export default function Layout() {
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
+      const w = window.innerWidth;
+      const mobile = w < 768;
+      const tablet = w >= 768 && w < 1024;
       setIsMobile(mobile);
-      setIsSidebarOpen(!mobile);
+      setIsTablet(tablet);
+      setIsSidebarOpen(w >= 1024);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -194,21 +198,31 @@ export default function Layout() {
         </motion.div>
       )}
 
-      {/* Desktop Sidebar */}
-      {!isMobile && isSidebarOpen && (
-        <motion.aside
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 256, opacity: 1 }}
-          className="bg-stone-900 text-stone-100 flex flex-col"
+      {/* Responsive Sidebar: icon-only for tablet, full for laptop */}
+      {!isMobile && (isTablet || isSidebarOpen) && (
+        <aside
+          className={`bg-stone-900 text-stone-100 flex flex-col shrink-0 transition-all duration-300 overflow-hidden ${
+            isTablet ? 'w-16' : 'w-64'
+          }`}
         >
-          <div className="p-5 pt-6">
-            <div className="mb-2">
-              <h1 className="text-2xl font-black tracking-wide text-white leading-tight uppercase" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '0.15em' }}>Sewa Outdoor</h1>
-              <p className="text-lg font-bold text-emerald-400 uppercase tracking-widest mt-1">Sameton</p>
+          {/* Logo */}
+          {isTablet ? (
+            <div className="py-5 flex justify-center border-b border-stone-800">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center">
+                <span className="text-white font-black text-sm">S</span>
+              </div>
             </div>
-            <div className="h-px bg-gradient-to-r from-emerald-500/60 to-transparent mt-3"></div>
-          </div>
-          <nav className="flex-1 px-4 space-y-2 mt-2">
+          ) : (
+            <div className="p-5 pt-6">
+              <div className="mb-2">
+                <h1 className="text-2xl font-black tracking-wide text-white leading-tight uppercase" style={{ letterSpacing: '0.15em' }}>Sewa Outdoor</h1>
+                <p className="text-lg font-bold text-emerald-400 uppercase tracking-widest mt-1">Sameton</p>
+              </div>
+              <div className="h-px bg-gradient-to-r from-emerald-500/60 to-transparent mt-3"></div>
+            </div>
+          )}
+          {/* Nav Items */}
+          <nav className={`flex-1 space-y-1.5 mt-3 ${isTablet ? 'px-2' : 'px-4'}`}>
             {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
@@ -216,29 +230,34 @@ export default function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  title={isTablet ? item.label : undefined}
+                  className={`flex items-center rounded-xl transition-colors ${
+                    isTablet ? 'justify-center p-3' : 'gap-3 px-4 py-3'
+                  } ${
                     isActive ? 'bg-emerald-600 text-white' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
                   }`}
                 >
                   <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  {!isTablet && <span className="font-medium">{item.label}</span>}
                 </Link>
               );
             })}
           </nav>
-        </motion.aside>
+        </aside>
       )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
         <header className="bg-white border-b border-stone-200 h-14 md:h-16 flex items-center justify-between px-3 md:px-6">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => isMobile ? setMobileMenuOpen(true) : setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-lg hover:bg-stone-100 text-stone-600 transition-colors"
-            >
-              {isMobile ? <Menu size={24} /> : (isSidebarOpen ? <X size={20} /> : <Menu size={20} />)}
-            </button>
+            {!isTablet && (
+              <button
+                onClick={() => isMobile ? setMobileMenuOpen(true) : setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 rounded-lg hover:bg-stone-100 text-stone-600 transition-colors"
+              >
+                {isMobile ? <Menu size={24} /> : (isSidebarOpen ? <X size={20} /> : <Menu size={20} />)}
+              </button>
+            )}
             <button
               onClick={() => setSearchOpen(true)}
               className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors text-stone-400 hover:text-stone-600"
@@ -309,12 +328,38 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-3 md:p-6">
+        <div className={`flex-1 overflow-auto p-3 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
           <Outlet />
         </div>
       </main>
 
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Mobile Bottom Tab Bar */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200 z-40 flex items-center justify-around px-1">
+          {filteredNavItems.slice(0, 5).map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
+                  isActive ? 'text-emerald-600' : 'text-stone-400'
+                }`}
+              >
+                <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-50' : ''}`}>
+                  <Icon size={21} />
+                </div>
+                <span className="text-[9px] font-bold leading-none">
+                  {item.label === 'POS / Rental' ? 'POS' : item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Password Modal */}
       {showPasswordModal && (

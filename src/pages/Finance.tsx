@@ -293,7 +293,7 @@ export default function Finance() {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-6 overflow-hidden">
+    <div className="flex flex-col h-auto md:h-full space-y-6 md:overflow-hidden pb-20 md:pb-0">
       <div className="sticky top-0 z-30 bg-stone-100 pt-1 pb-4 flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-stone-900">Financial Reports</h1>

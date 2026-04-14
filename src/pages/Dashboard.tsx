@@ -172,7 +172,7 @@ export default function Dashboard() {
         </div>
 
         {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             const TrendIcon = stat.trendIcon;
@@ -182,7 +182,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200"
+                className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-stone-200"
               >
                 <div className="flex items-center justify-between">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bgColor} ${stat.color}`}>
@@ -204,12 +204,12 @@ export default function Dashboard() {
       </div>
 
       {/* Active Rentals / Peringatan WA */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-stone-200">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
               <Clock size={20} className="text-amber-500" />
-              Sewa Berjalan & Reminder
+              Sewa Berjalan &amp; Reminder
             </h3>
             <p className="text-sm text-stone-500 mt-0.5">Daftar pelanggan yang masih dalam masa sewa berjalan.</p>
           </div>
@@ -224,82 +224,104 @@ export default function Dashboard() {
             <p className="text-sm font-medium">Tidak ada penyewaan berjalan</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead className="bg-stone-50 border-b border-stone-100">
-                <tr className="text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                  <th className="p-3 rounded-tl-xl">Pelanggan</th>
-                  <th className="p-3">Periode</th>
-                  <th className="p-3">Sisa Waktu</th>
-                  <th className="p-3">Jaminan</th>
-                  <th className="p-3 text-right rounded-tr-xl">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100 text-sm">
-                {activeRentals.map((tx: any, idx: number) => {
-                  // Pengembalian sesuai dengan End Date yang dipilih di POS
-                  const dueDate = startOfDay(new Date(tx.endDate));
-                  const today = startOfDay(new Date());
+          <>
+            {/* Mobile: Card list */}
+            <div className="block md:hidden space-y-3">
+              {activeRentals.map((tx: any, idx: number) => {
+                const dueDate = startOfDay(new Date(tx.endDate));
+                const today = startOfDay(new Date());
+                const daysLeft = differenceInDays(dueDate, today);
+                let tagColor = '';
+                let tagText = '';
+                if (daysLeft < 0) { tagColor = 'bg-red-100 text-red-700'; tagText = `Terlambat ${Math.abs(daysLeft)} Hari`; }
+                else if (daysLeft === 0) { tagColor = 'bg-red-100 text-red-700'; tagText = 'Jatuh Tempo Hari Ini!'; }
+                else if (daysLeft === 1) { tagColor = 'bg-orange-100 text-orange-700'; tagText = 'H-1 (Besok)'; }
+                else { tagColor = 'bg-emerald-100 text-emerald-700'; tagText = `${daysLeft} Hari Lagi`; }
+                return (
+                  <div key={tx.id || idx} className="bg-stone-50 rounded-2xl p-4 border border-stone-100">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-stone-800 text-sm">{tx.customerName || '-'}</p>
+                        <p className="text-xs text-stone-500">{tx.customerPhone || 'Tidak ada no. HP'}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${tagColor}`}>{tagText}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-stone-500">
+                        {tx.startDate ? format(new Date(tx.startDate), 'dd MMM') : '-'} s/d {tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-'}
+                      </p>
+                      <button
+                        onClick={() => handleSendReminderWA(tx)}
+                        disabled={!tx.customerPhone}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                      >
+                        <MessageCircle size={12} /> WA
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                  // daysLeft: selisih hari dari dueDate ke today
-                  // Positif = Belum jatuh tempo. 0 = Hari ini. Negatif = Terlambat.
-                  const daysLeft = differenceInDays(dueDate, today);
-
-                  let tagColor = '';
-                  let tagText = '';
-
-                  if (daysLeft < 0) {
-                    tagColor = 'bg-red-100 text-red-700';
-                    tagText = `Terlambat ${Math.abs(daysLeft)} Hari`;
-                  } else if (daysLeft === 0) {
-                    tagColor = 'bg-red-100 text-red-700';
-                    tagText = 'Jatuh Tempo Hari Ini!';
-                  } else if (daysLeft === 1) {
-                    tagColor = 'bg-orange-100 text-orange-700';
-                    tagText = 'H-1 (Besok)';
-                  } else {
-                    tagColor = 'bg-emerald-100 text-emerald-700';
-                    tagText = `${daysLeft} Hari Lagi`;
-                  }
-
-                  return (
-                    <tr key={tx.id || idx} className="hover:bg-stone-50/50 transition-colors">
-                      <td className="p-3">
-                        <div className="font-bold text-stone-800">{tx.customerName || '-'}</div>
-                        <div className="text-xs text-stone-500">{tx.customerPhone || 'Tidak ada no. HP'}</div>
-                      </td>
-                      <td className="p-3 text-stone-600">
-                        {tx.startDate ? format(new Date(tx.startDate), 'dd MMM yyyy') : '-'} s/d <br />
-                        <span className="font-medium text-stone-800">{tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-'}</span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${tagColor}`}>
-                          {tagText}
-                        </span>
-                      </td>
-                      <td className="p-3 sticky right-0">
-                        <span className="text-[11px] font-bold text-stone-500 uppercase bg-stone-100 px-2 py-1 rounded-lg">
-                          {tx.guarantee || '-'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => handleSendReminderWA(tx)}
-                          disabled={!tx.customerPhone}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 opacity-90 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <MessageCircle size={14} />
-                          Kirim WA
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            {/* Desktop: Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead className="bg-stone-50 border-b border-stone-100">
+                  <tr className="text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                    <th className="p-3 rounded-tl-xl">Pelanggan</th>
+                    <th className="p-3">Periode</th>
+                    <th className="p-3">Sisa Waktu</th>
+                    <th className="p-3">Jaminan</th>
+                    <th className="p-3 text-right rounded-tr-xl">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100 text-sm">
+                  {activeRentals.map((tx: any, idx: number) => {
+                    const dueDate = startOfDay(new Date(tx.endDate));
+                    const today = startOfDay(new Date());
+                    const daysLeft = differenceInDays(dueDate, today);
+                    let tagColor = '';
+                    let tagText = '';
+                    if (daysLeft < 0) { tagColor = 'bg-red-100 text-red-700'; tagText = `Terlambat ${Math.abs(daysLeft)} Hari`; }
+                    else if (daysLeft === 0) { tagColor = 'bg-red-100 text-red-700'; tagText = 'Jatuh Tempo Hari Ini!'; }
+                    else if (daysLeft === 1) { tagColor = 'bg-orange-100 text-orange-700'; tagText = 'H-1 (Besok)'; }
+                    else { tagColor = 'bg-emerald-100 text-emerald-700'; tagText = `${daysLeft} Hari Lagi`; }
+                    return (
+                      <tr key={tx.id || idx} className="hover:bg-stone-50/50 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-stone-800">{tx.customerName || '-'}</div>
+                          <div className="text-xs text-stone-500">{tx.customerPhone || 'Tidak ada no. HP'}</div>
+                        </td>
+                        <td className="p-3 text-stone-600">
+                          {tx.startDate ? format(new Date(tx.startDate), 'dd MMM yyyy') : '-'} s/d <br />
+                          <span className="font-medium text-stone-800">{tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-'}</span>
+                        </td>
+                        <td className="p-3">
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${tagColor}`}>{tagText}</span>
+                        </td>
+                        <td className="p-3 sticky right-0">
+                          <span className="text-[11px] font-bold text-stone-500 uppercase bg-stone-100 px-2 py-1 rounded-lg">{tx.guarantee || '-'}</span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => handleSendReminderWA(tx)}
+                            disabled={!tx.customerPhone}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 opacity-90 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <MessageCircle size={14} />
+                            Kirim WA
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
+
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
         <div className="flex items-center justify-between mb-2">

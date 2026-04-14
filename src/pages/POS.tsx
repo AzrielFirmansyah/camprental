@@ -55,9 +55,17 @@ export default function POS() {
   const [isDiscountDropdownOpen, setIsDiscountDropdownOpen] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { addNotification } = useNotifications();
   const receiptRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -285,7 +293,7 @@ export default function POS() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-auto lg:h-full gap-4">
       {/* Tab Switcher */}
       <div className="flex bg-stone-200/50 p-1.5 rounded-2xl w-fit self-center sm:self-start">
         <button
@@ -304,11 +312,11 @@ export default function POS() {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:overflow-hidden pb-32 lg:pb-0">
         {activeTab === 'rental' ? (
           <>
             {/* Left Side: Items Catalog */}
-            <div className="flex-1 flex flex-col min-w-0 gap-4">
+            <div className="flex-1 flex flex-col min-w-0 gap-4 lg:overflow-hidden">
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-200 space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
@@ -341,7 +349,7 @@ export default function POS() {
               </div>
 
               {/* Grid Items */}
-              <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-stone-200">
+              <div className="flex-1 lg:overflow-y-auto pr-1 lg:scrollbar-thin lg:scrollbar-thumb-stone-200">
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                   {filteredItems.map(item => (
                     <motion.div
@@ -378,7 +386,7 @@ export default function POS() {
             </div>
 
             {/* Right Side: Cart Dashboard */}
-            <div className="w-full lg:w-[380px] bg-white rounded-3xl shadow-xl border border-stone-200 flex flex-col overflow-hidden shrink-0">
+            <div id="cart-panel" className="w-full lg:w-[380px] bg-white rounded-3xl shadow-xl border border-stone-200 flex flex-col lg:h-full overflow-hidden shrink-0">
               <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-xl"><ShoppingCart size={22} /></div>
@@ -555,7 +563,26 @@ export default function POS() {
         )}
       </div>
 
-      {/* MODALS */}
+      {/* Mobile Floating Cart Bar */}
+      {isMobile && activeTab === 'rental' && cart.length > 0 && (
+        <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-2">
+          <div className="bg-emerald-600 text-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-2xl shadow-emerald-500/30">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+                <ShoppingCart size={14} />
+              </div>
+              <span className="font-bold text-sm">{cart.length} Item</span>
+            </div>
+            <span className="font-black text-base">{formatCurrency(totalAmount)}</span>
+            <button
+              onClick={() => { const el = document.getElementById('cart-panel'); el?.scrollIntoView({ behavior: 'smooth' }); }}
+              className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Lihat →
+            </button>
+          </div>
+        </div>
+      )}
       <AnimatePresence>
         {/* Confirm Modal */}
         {showConfirmModal && (

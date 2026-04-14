@@ -31,6 +31,14 @@ export default function Inventory() {
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [deleteImage, setDeleteImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -288,7 +296,7 @@ export default function Inventory() {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-6 overflow-hidden">
+    <div className="flex flex-col h-auto md:h-full space-y-6 md:overflow-hidden pb-20 md:pb-0">
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-30 bg-stone-100 pt-1 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -322,72 +330,128 @@ export default function Inventory() {
         </div>
 
         <div className="flex-1 overflow-auto">
-          <table className="min-w-full divide-y divide-stone-200 border-separate border-spacing-0">
-            <thead className="bg-stone-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Item Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Daily Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Stock (Avail/Total)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
-                {isAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-stone-200">
+          {/* Mobile: Card Grid */}
+          {isMobile ? (
+            <div className="p-4 space-y-3">
               {loading ? (
-                <tr><td colSpan={6} className="px-6 py-4 text-center text-stone-500">Loading...</td></tr>
+                <div className="py-10 text-center text-stone-400 text-sm">Loading...</div>
               ) : currentItems.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-4 text-center text-stone-500">No items found</td></tr>
+                <div className="py-10 text-center text-stone-400 text-sm">No items found</div>
               ) : (
                 currentItems.map((item) => {
                   const status = getDisplayStatus(item);
                   return (
-                    <motion.tr
+                    <motion.div
                       key={item.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-stone-50"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-stone-50 rounded-2xl border border-stone-200 p-4 flex gap-3 items-center"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-stone-900">{item.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-stone-500">{item.categoryName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-stone-900">{formatCurrency(item.dailyPrice)}</div>
-                        <div className="text-xs text-stone-500">{formatCurrency(item.weeklyPrice)} / week</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className={`text-sm font-medium ${item.availableStock < 3 ? 'text-red-600' : 'text-emerald-600'}`}>
-                            {item.availableStock}
-                          </span>
-                          <span className="text-sm text-stone-500 mx-1">/</span>
-                          <span className="text-sm text-stone-500">{item.totalStock}</span>
+                      {/* Image */}
+                      <div className="w-16 h-16 rounded-xl bg-white border border-stone-100 flex items-center justify-center overflow-hidden shrink-0">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-stone-200 flex items-center justify-center">
+                            <span className="text-stone-500 font-black text-sm">{item.name?.charAt(0)}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-stone-900 text-sm truncate uppercase">{item.name}</p>
+                        <p className="text-xs text-stone-400 truncate">{item.categoryName}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-xs font-black text-emerald-600">{formatCurrency(item.dailyPrice)}<span className="font-normal text-stone-400">/hr</span></span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.colors}`}>{status.text}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.colors}`}>
-                          {status.text}
-                        </span>
-                      </td>
+                        <p className="text-[11px] text-stone-500 mt-0.5">Stok: <span className={item.availableStock < 3 ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>{item.availableStock}</span>/{item.totalStock}</p>
+                      </div>
+                      {/* Actions */}
                       {isAdmin && (
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => openModal(item)} className="text-blue-600 hover:text-blue-900 mr-4">
-                            <Edit size={18} />
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          <button onClick={() => openModal(item)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors">
+                            <Edit size={15} />
                           </button>
-                          <button onClick={() => confirmDelete(item.id)} className="text-red-600 hover:text-red-900">
-                            <Trash2 size={18} />
+                          <button onClick={() => confirmDelete(item.id)} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
+                            <Trash2 size={15} />
                           </button>
-                        </td>
+                        </div>
                       )}
-                    </motion.tr>
+                    </motion.div>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            /* Desktop: Table */
+            <table className="min-w-full divide-y divide-stone-200 border-separate border-spacing-0">
+              <thead className="bg-stone-50 sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Daily Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Stock (Avail/Total)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
+                  {isAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-stone-200">
+                {loading ? (
+                  <tr><td colSpan={6} className="px-6 py-4 text-center text-stone-500">Loading...</td></tr>
+                ) : currentItems.length === 0 ? (
+                  <tr><td colSpan={6} className="px-6 py-4 text-center text-stone-500">No items found</td></tr>
+                ) : (
+                  currentItems.map((item) => {
+                    const status = getDisplayStatus(item);
+                    return (
+                      <motion.tr
+                        key={item.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="hover:bg-stone-50"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-stone-900">{item.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-stone-500">{item.categoryName}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-stone-900">{formatCurrency(item.dailyPrice)}</div>
+                          <div className="text-xs text-stone-500">{formatCurrency(item.weeklyPrice)} / week</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className={`text-sm font-medium ${item.availableStock < 3 ? 'text-red-600' : 'text-emerald-600'}`}>
+                              {item.availableStock}
+                            </span>
+                            <span className="text-sm text-stone-500 mx-1">/</span>
+                            <span className="text-sm text-stone-500">{item.totalStock}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.colors}`}>
+                            {status.text}
+                          </span>
+                        </td>
+                        {isAdmin && (
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onClick={() => openModal(item)} className="text-blue-600 hover:text-blue-900 mr-4">
+                              <Edit size={18} />
+                            </button>
+                            <button onClick={() => confirmDelete(item.id)} className="text-red-600 hover:text-red-900">
+                              <Trash2 size={18} />
+                            </button>
+                          </td>
+                        )}
+                      </motion.tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Pagination Controls */}
