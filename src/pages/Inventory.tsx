@@ -75,23 +75,19 @@ export default function Inventory() {
   }, []);
 
   useEffect(() => {
-    const handleSearchFilter = () => {
-      const itemId = localStorage.getItem('searchItemId');
-      const itemName = localStorage.getItem('searchItemName');
-      
-      if (itemId) {
-        localStorage.removeItem('searchItemId');
-        localStorage.removeItem('searchItemName');
-        loadData().then(() => {
-          setCurrentPage(1);
-          setItems((prev: any[]) => prev.filter(i => i.id.toString() === itemId));
-        });
-      } else if (itemName) {
-        localStorage.removeItem('searchItemName');
-        setSearchTerm(itemName);
-      }
-    };
-    handleSearchFilter();
+    const itemId = localStorage.getItem('searchItemId');
+    const itemName = localStorage.getItem('searchItemName');
+    
+    if (itemId) {
+      setSearchTerm(itemName || itemId);
+      localStorage.removeItem('searchItemId');
+      localStorage.removeItem('searchItemName');
+      setCurrentPage(1);
+    } else if (itemName) {
+      setSearchTerm(itemName);
+      localStorage.removeItem('searchItemName');
+      setCurrentPage(1);
+    }
   }, []);
 
   const handlePreSubmit = (e: React.FormEvent) => {

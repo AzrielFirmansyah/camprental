@@ -326,15 +326,29 @@ export default function Layout() {
               </Link>
             );
           })}
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-stone-400"
-          >
-            <div className="p-1.5 rounded-xl">
-              <MoreHorizontal size={18} />
-            </div>
-            <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Top</span>
-          </button>
+          {user?.role === 'admin' ? (
+            <Link
+              to="/users"
+              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
+                location.pathname === '/users' ? 'text-emerald-600' : 'text-stone-400'
+              }`}
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${location.pathname === '/users' ? 'bg-emerald-50' : ''}`}>
+                <Users size={18} />
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Users</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-stone-400 active:text-emerald-600 transition-all"
+            >
+              <div className="p-1.5 rounded-xl transition-all active:bg-emerald-50">
+                <Search size={18} />
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Cari</span>
+            </button>
+          )}
         </nav>
       )}
 

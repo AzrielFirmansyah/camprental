@@ -76,6 +76,8 @@ export default function Finance() {
     }
   };
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const applyFilters = (data: any[]) => {
     return data.filter((tx: any) => {
       const txDate = new Date(tx.createdAt);
@@ -99,6 +101,17 @@ export default function Finance() {
         if (dbStatus && tx.status !== dbStatus) return false;
       }
 
+      if (searchTerm) {
+        const query = searchTerm.toLowerCase();
+        if (
+          tx.id.toString() !== query &&
+          !tx.customerName?.toLowerCase().includes(query) &&
+          !tx.customerPhone?.includes(query)
+        ) {
+          return false;
+        }
+      }
+
       return true;
     });
   };
@@ -110,30 +123,19 @@ export default function Finance() {
   }, []);
 
   useEffect(() => {
-    const handleSearchFilter = () => {
-      const transactionId = localStorage.getItem('searchTransactionId');
-      const transactionName = localStorage.getItem('searchTransactionName');
-      
-      if (transactionId) {
-        localStorage.removeItem('searchTransactionId');
-        localStorage.removeItem('searchTransactionName');
-        loadData().then(() => {
-          setCurrentIncomePage(1);
-          setTransactions((prev: any[]) => prev.filter(t => t.id.toString() === transactionId));
-        });
-      } else if (transactionName) {
-        localStorage.removeItem('searchTransactionName');
-        loadData().then(() => {
-          setCurrentIncomePage(1);
-          setTransactions((prev: any[]) => prev.filter((t: any) => 
-            t.customerName?.toLowerCase().includes(transactionName.toLowerCase()) ||
-            t.id.toString() === transactionName ||
-            t.customerPhone?.includes(transactionName)
-          ));
-        });
-      }
-    };
-    handleSearchFilter();
+    const transactionId = localStorage.getItem('searchTransactionId');
+    const transactionName = localStorage.getItem('searchTransactionName');
+    
+    if (transactionId) {
+      setSearchTerm(transactionId);
+      localStorage.removeItem('searchTransactionId');
+      localStorage.removeItem('searchTransactionName');
+      setCurrentIncomePage(1);
+    } else if (transactionName) {
+      setSearchTerm(transactionName);
+      localStorage.removeItem('searchTransactionName');
+      setCurrentIncomePage(1);
+    }
   }, []);
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
@@ -463,10 +465,10 @@ export default function Finance() {
           </div>
 
           {/* Reset button - only show when filter active */}
-          {(filters.year || filters.month || filters.date || filters.paymentMethod !== 'all' || filters.status !== 'all') && (
+          {(searchTerm || filters.year || filters.month || filters.date || filters.paymentMethod !== 'all' || filters.status !== 'all') && (
             <div className="mt-3 pt-3 border-t border-stone-100 flex justify-end">
               <button
-                onClick={() => { setFilters({ year: '', month: '', date: '', paymentMethod: 'all', status: 'all' }); setCurrentIncomePage(1); }}
+                onClick={() => { setSearchTerm(''); setFilters({ year: '', month: '', date: '', paymentMethod: 'all', status: 'all' }); setCurrentIncomePage(1); }}
                 className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
               >
                 <X size={13} /> Reset Filter

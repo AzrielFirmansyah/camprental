@@ -60,6 +60,22 @@ export default function Master() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const categoryId = localStorage.getItem('searchCategoryId');
+    const categoryName = localStorage.getItem('searchCategoryName');
+    
+    if (categoryId) {
+      setSearchTerm(categoryName || categoryId);
+      setActiveTab('categories');
+      localStorage.removeItem('searchCategoryId');
+      localStorage.removeItem('searchCategoryName');
+    } else if (categoryName) {
+      setSearchTerm(categoryName);
+      setActiveTab('categories');
+      localStorage.removeItem('searchCategoryName');
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let endpoint = '';
