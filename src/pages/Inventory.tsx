@@ -23,7 +23,6 @@ export default function Inventory() {
     name: '',
     categoryId: '',
     dailyPrice: '',
-    weeklyPrice: '',
     totalStock: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -99,7 +98,10 @@ export default function Inventory() {
     setSubmitting(true);
     try {
       const payload = {
-        ...formData,
+        name: formData.name,
+        dailyPrice: formData.dailyPrice,
+        weeklyPrice: Number(formData.dailyPrice) * 7,
+        totalStock: formData.totalStock,
         categoryId: parseInt(formData.categoryId) || null
       };
       
@@ -141,7 +143,7 @@ export default function Inventory() {
       }
       setIsModalOpen(false);
       setEditingItem(null);
-      setFormData({ name: '', categoryId: '', dailyPrice: '', weeklyPrice: '', totalStock: '' });
+      setFormData({ name: '', categoryId: '', dailyPrice: '', totalStock: '' });
       setImageFile(null);
       setImagePreview(null);
       setExistingImage(null);
@@ -184,7 +186,6 @@ export default function Inventory() {
         name: item.name || '',
         categoryId: item.categoryId?.toString() || '',
         dailyPrice: item.dailyPrice?.toString() || '',
-        weeklyPrice: item.weeklyPrice?.toString() || '',
         totalStock: item.totalStock?.toString() || ''
       });
       setExistingImage(item.image || null);
@@ -196,7 +197,6 @@ export default function Inventory() {
         name: '',
         categoryId: categories[0]?.id?.toString() || '',
         dailyPrice: '',
-        weeklyPrice: '',
         totalStock: ''
       });
       setExistingImage(null);
@@ -386,7 +386,7 @@ export default function Inventory() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Item Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Daily Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Harga / Hari</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Stock (Avail/Total)</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
                   {isAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>}
@@ -414,8 +414,7 @@ export default function Inventory() {
                           <div className="text-sm text-stone-500">{item.categoryName}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-900">{formatCurrency(item.dailyPrice)}</div>
-                          <div className="text-xs text-stone-500">{formatCurrency(item.weeklyPrice)} / week</div>
+                          <div className="text-sm font-black text-emerald-600">{formatCurrency(item.dailyPrice)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -507,6 +506,49 @@ export default function Inventory() {
             
             <form onSubmit={handlePreSubmit} className="p-5 md:p-6 space-y-4">
               <div className="space-y-4">
+                {/* Image Upload Area */}
+                <div>
+                  <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Foto Barang</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-2xl bg-stone-50 border-2 border-dashed border-stone-200 flex items-center justify-center overflow-hidden relative group">
+                      {(imagePreview || (existingImage && !deleteImage)) ? (
+                        <>
+                          <img src={imagePreview || existingImage || ''} alt="Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute inset-0 bg-stone-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={16} className="text-white" />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-stone-300 flex flex-col items-center justify-center">
+                          <ImageIcon size={isMobile ? 18 : 20} className="mb-1" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">Upload</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2.5 bg-white hover:bg-stone-50 text-stone-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all w-full border border-stone-200 shadow-sm active:scale-95"
+                      >
+                        Pilih Gambar Baru
+                      </button>
+                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1.5 ml-1 text-center">JPG/PNG MAKS 10MB</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Nama Item</label>
                   <input 

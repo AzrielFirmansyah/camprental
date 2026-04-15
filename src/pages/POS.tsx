@@ -131,9 +131,7 @@ export default function POS() {
   };
 
   const calculateItemPrice = (item: any) => {
-    const weeks = Math.floor(durationDays / 7);
-    const days = durationDays % 7;
-    return (weeks * item.weeklyPrice) + (days * item.dailyPrice);
+    return durationDays * item.dailyPrice;
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (calculateItemPrice(item) * item.quantity), 0);
