@@ -45,6 +45,7 @@ export default function Finance() {
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
   const [isMethodDropdownOpen, setIsMethodDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [showFilterMobile, setShowFilterMobile] = useState(false);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -348,133 +349,155 @@ export default function Finance() {
         </div>
 
         {/* Compact Filter Bar — POS Discount Style */}
-        <div className="bg-white p-4 rounded-2xl border border-stone-200">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-
-            {/* Tahun */}
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Tahun</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { setIsYearDropdownOpen(!isYearDropdownOpen); setIsMonthDropdownOpen(false); setIsMethodDropdownOpen(false); setIsStatusDropdownOpen(false); }}
-                  className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-500 transition-all"
-                >
-                  <span className={filters.year ? 'text-emerald-600' : 'text-stone-500'}>
-                    {filters.year || 'Semua Tahun'}
-                  </span>
-                  <ChevronDown size={14} className={`text-stone-400 transition-transform ${isYearDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isYearDropdownOpen && (
-                  <div className="absolute top-full mt-1 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-200 z-50 overflow-hidden py-1">
-                    <button onClick={() => { setFilters({ ...filters, year: '' }); setCurrentIncomePage(1); setIsYearDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500">Semua Tahun</button>
-                    {['2026', '2025', '2024'].map(y => (
-                      <button key={y} onClick={() => { setFilters({ ...filters, year: y }); setCurrentIncomePage(1); setIsYearDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700">{y}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bulan */}
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Bulan</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { setIsMonthDropdownOpen(!isMonthDropdownOpen); setIsYearDropdownOpen(false); setIsMethodDropdownOpen(false); setIsStatusDropdownOpen(false); }}
-                  className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-500 transition-all"
-                >
-                  <span className={filters.month ? 'text-emerald-600' : 'text-stone-500'}>
-                    {filters.month ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(filters.month)] : 'Semua Bulan'}
-                  </span>
-                  <ChevronDown size={14} className={`text-stone-400 transition-transform ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isMonthDropdownOpen && (
-                  <div className="absolute top-full mt-1 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-200 z-50 overflow-hidden py-1 max-h-52 overflow-y-auto">
-                    <button onClick={() => { setFilters({ ...filters, month: '' }); setCurrentIncomePage(1); setIsMonthDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500">Semua Bulan</button>
-                    {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map((m, i) => (
-                      <button key={i+1} onClick={() => { setFilters({ ...filters, month: String(i+1) }); setCurrentIncomePage(1); setIsMonthDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700">{m}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Tanggal */}
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Tanggal</label>
-              <input
-                type="date"
-                value={filters.date}
-                onChange={(e) => { setFilters({ ...filters, date: e.target.value }); setCurrentIncomePage(1); }}
-                className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-stone-700 hover:border-emerald-500 focus:outline-none focus:border-emerald-500 transition-all"
-              />
-            </div>
-
-            {/* Metode */}
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Metode Bayar</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { setIsMethodDropdownOpen(!isMethodDropdownOpen); setIsYearDropdownOpen(false); setIsMonthDropdownOpen(false); setIsStatusDropdownOpen(false); }}
-                  className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-500 transition-all"
-                >
-                  <span className={filters.paymentMethod !== 'all' ? 'text-emerald-600' : 'text-stone-500'}>
-                    {filters.paymentMethod !== 'all' ? filters.paymentMethod : 'Semua Metode'}
-                  </span>
-                  <ChevronDown size={14} className={`text-stone-400 transition-transform ${isMethodDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isMethodDropdownOpen && (
-                  <div className="absolute top-full mt-1 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-200 z-50 overflow-hidden py-1">
-                    <button onClick={() => { setFilters({ ...filters, paymentMethod: 'all' }); setCurrentIncomePage(1); setIsMethodDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500">Semua Metode</button>
-                    {paymentMethods.map((pm: any) => (
-                      <button key={pm.id} onClick={() => { setFilters({ ...filters, paymentMethod: pm.name }); setCurrentIncomePage(1); setIsMethodDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700">{pm.name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase mb-1.5">Status</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { setIsStatusDropdownOpen(!isStatusDropdownOpen); setIsYearDropdownOpen(false); setIsMonthDropdownOpen(false); setIsMethodDropdownOpen(false); }}
-                  className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-500 transition-all"
-                >
-                  <span className={filters.status !== 'all' ? 'text-emerald-600' : 'text-stone-500'}>
-                    {filters.status !== 'all' ? filters.status : 'Semua Status'}
-                  </span>
-                  <ChevronDown size={14} className={`text-stone-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isStatusDropdownOpen && (
-                  <div className="absolute top-full mt-1 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-200 z-50 overflow-hidden py-1">
-                    <button onClick={() => { setFilters({ ...filters, status: 'all' }); setCurrentIncomePage(1); setIsStatusDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500">Semua Status</button>
-                    {transactionStatuses.map((ts: any) => (
-                      <button key={ts.id} onClick={() => { setFilters({ ...filters, status: ts.name }); setCurrentIncomePage(1); setIsStatusDropdownOpen(false); }} className="w-full px-3 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700">{ts.name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Reset button - only show when filter active */}
-          {(searchTerm || filters.year || filters.month || filters.date || filters.paymentMethod !== 'all' || filters.status !== 'all') && (
-            <div className="mt-3 pt-3 border-t border-stone-100 flex justify-end">
-              <button
-                onClick={() => { setSearchTerm(''); setFilters({ year: '', month: '', date: '', paymentMethod: 'all', status: 'all' }); setCurrentIncomePage(1); }}
-                className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+        <div className="bg-white p-4 rounded-2xl md:rounded-[20px] shadow-sm border border-stone-200">
+          {isMobile && (
+            <div className="flex justify-between items-center mb-0">
+              <span className="text-[10px] font-black text-stone-800 uppercase tracking-widest">Filter Laporan</span>
+              <button 
+                onClick={() => setShowFilterMobile(!showFilterMobile)}
+                className="px-3 py-1.5 bg-stone-100/80 text-stone-600 text-[10px] font-bold uppercase rounded-lg active:scale-95 transition-all border border-stone-200/50"
               >
-                <X size={13} /> Reset Filter
+                {showFilterMobile ? 'Sembunyikan' : 'Tampilkan'}
               </button>
             </div>
           )}
+          
+          <div className={`${isMobile && !showFilterMobile ? 'hidden' : 'block'} mt-3 md:mt-0`}>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+
+              {/* Tahun */}
+              <div>
+                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Tahun</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsYearDropdownOpen(!isYearDropdownOpen); setIsMonthDropdownOpen(false); setIsMethodDropdownOpen(false); setIsStatusDropdownOpen(false); }}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/30 transition-all focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <span className={filters.year ? 'text-emerald-600' : 'text-stone-500'}>
+                      {filters.year || 'Semua Tahun'}
+                    </span>
+                    <ChevronDown size={14} className={`text-stone-400 transition-transform ${isYearDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                  {isYearDropdownOpen && (
+                    <motion.div initial={{opacity:0, y:-5}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-5}} className="absolute top-full mt-1.5 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-100 z-50 overflow-hidden py-1.5">
+                      <button onClick={() => { setFilters({ ...filters, year: '' }); setCurrentIncomePage(1); setIsYearDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500 transition-colors">Semua Tahun</button>
+                      {['2026', '2025', '2024'].map(y => (
+                        <button key={y} onClick={() => { setFilters({ ...filters, year: y }); setCurrentIncomePage(1); setIsYearDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700 transition-colors">{y}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Bulan */}
+              <div>
+                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Bulan</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsMonthDropdownOpen(!isMonthDropdownOpen); setIsYearDropdownOpen(false); setIsMethodDropdownOpen(false); setIsStatusDropdownOpen(false); }}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/30 transition-all focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <span className={filters.month ? 'text-emerald-600' : 'text-stone-500'}>
+                      {filters.month ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(filters.month)] : 'Semua Bulan'}
+                    </span>
+                    <ChevronDown size={14} className={`text-stone-400 transition-transform ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                  {isMonthDropdownOpen && (
+                    <motion.div initial={{opacity:0, y:-5}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-5}} className="absolute top-full mt-1.5 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-100 z-50 overflow-hidden py-1.5 max-h-52 overflow-y-auto">
+                      <button onClick={() => { setFilters({ ...filters, month: '' }); setCurrentIncomePage(1); setIsMonthDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500 transition-colors">Semua Bulan</button>
+                      {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map((m, i) => (
+                        <button key={i+1} onClick={() => { setFilters({ ...filters, month: String(i+1) }); setCurrentIncomePage(1); setIsMonthDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700 transition-colors">{m}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Tanggal */}
+              <div>
+                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Tanggal</label>
+                <input
+                  type="date"
+                  value={filters.date}
+                  onChange={(e) => { setFilters({ ...filters, date: e.target.value }); setCurrentIncomePage(1); }}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-stone-700 hover:border-emerald-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                />
+              </div>
+
+              {/* Metode */}
+              <div>
+                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Metode Bayar</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsMethodDropdownOpen(!isMethodDropdownOpen); setIsYearDropdownOpen(false); setIsMonthDropdownOpen(false); setIsStatusDropdownOpen(false); }}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/30 transition-all focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <span className={filters.paymentMethod !== 'all' ? 'text-emerald-600' : 'text-stone-500'}>
+                      {filters.paymentMethod !== 'all' ? filters.paymentMethod : 'Semua Metode'}
+                    </span>
+                    <ChevronDown size={14} className={`text-stone-400 transition-transform ${isMethodDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                  {isMethodDropdownOpen && (
+                    <motion.div initial={{opacity:0, y:-5}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-5}} className="absolute top-full mt-1.5 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-100 z-50 overflow-hidden py-1.5">
+                      <button onClick={() => { setFilters({ ...filters, paymentMethod: 'all' }); setCurrentIncomePage(1); setIsMethodDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500 transition-colors">Semua Metode</button>
+                      {paymentMethods.map((pm: any) => (
+                        <button key={pm.id} onClick={() => { setFilters({ ...filters, paymentMethod: pm.name }); setCurrentIncomePage(1); setIsMethodDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700 transition-colors">{pm.name}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsStatusDropdownOpen(!isStatusDropdownOpen); setIsYearDropdownOpen(false); setIsMonthDropdownOpen(false); setIsMethodDropdownOpen(false); }}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-left flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/30 transition-all focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <span className={filters.status !== 'all' ? 'text-emerald-600' : 'text-stone-500'}>
+                      {filters.status !== 'all' ? filters.status : 'Semua Status'}
+                    </span>
+                    <ChevronDown size={14} className={`text-stone-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                  {isStatusDropdownOpen && (
+                    <motion.div initial={{opacity:0, y:-5}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-5}} className="absolute top-full mt-1.5 left-0 w-full bg-white shadow-xl rounded-xl border border-stone-100 z-50 overflow-hidden py-1.5">
+                      <button onClick={() => { setFilters({ ...filters, status: 'all' }); setCurrentIncomePage(1); setIsStatusDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-stone-50 text-stone-500 transition-colors">Semua Status</button>
+                      {transactionStatuses.map((ts: any) => (
+                        <button key={ts.id} onClick={() => { setFilters({ ...filters, status: ts.name }); setCurrentIncomePage(1); setIsStatusDropdownOpen(false); }} className="w-full px-4 py-2 text-left text-xs font-bold hover:bg-emerald-50 text-stone-700 transition-colors">{ts.name}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Reset button - only show when filter active */}
+            {(searchTerm || filters.year || filters.month || filters.date || filters.paymentMethod !== 'all' || filters.status !== 'all') && (
+              <div className="mt-4 pt-3 border-t border-stone-100 flex justify-end">
+                <button
+                  onClick={() => { setSearchTerm(''); setFilters({ year: '', month: '', date: '', paymentMethod: 'all', status: 'all' }); setCurrentIncomePage(1); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-[10px] font-black text-red-600 rounded-lg hover:bg-red-100 uppercase tracking-widest transition-colors"
+                >
+                  <X size={14} strokeWidth={3} /> RESET FILTER
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

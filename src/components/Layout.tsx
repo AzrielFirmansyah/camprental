@@ -143,9 +143,8 @@ export default function Layout() {
       {/* Responsive Sidebar: icon-only for tablet, full for laptop */}
       {!isMobile && (isTablet || isSidebarOpen) && (
         <aside
-          className={`bg-stone-900 text-stone-100 flex flex-col shrink-0 transition-all duration-300 overflow-hidden ${
-            isTablet ? 'w-16' : 'w-64'
-          }`}
+          className={`bg-stone-900 text-stone-100 flex flex-col shrink-0 transition-all duration-300 overflow-hidden ${isTablet ? 'w-16' : 'w-64'
+            }`}
         >
           {/* Logo */}
           {isTablet ? (
@@ -173,11 +172,9 @@ export default function Layout() {
                   key={item.path}
                   to={item.path}
                   title={isTablet ? item.label : undefined}
-                  className={`flex items-center rounded-xl transition-colors ${
-                    isTablet ? 'justify-center p-3' : 'gap-3 px-4 py-3'
-                  } ${
-                    isActive ? 'bg-emerald-600 text-white' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
-                  }`}
+                  className={`flex items-center rounded-xl transition-colors ${isTablet ? 'justify-center p-3' : 'gap-3 px-4 py-3'
+                    } ${isActive ? 'bg-emerald-600 text-white' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
+                    }`}
                 >
                   <Icon size={20} />
                   {!isTablet && <span className="font-medium">{item.label}</span>}
@@ -215,7 +212,7 @@ export default function Layout() {
           <div className="flex items-center gap-2.5">
             {isMobile ? (
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
                   className="flex items-center gap-2 p-1 bg-stone-50 border border-stone-200 rounded-2xl active:scale-95 transition-all"
                 >
@@ -231,7 +228,7 @@ export default function Layout() {
                 <AnimatePresence>
                   {isAccountMenuOpen && (
                     <>
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={() => setIsAccountMenuOpen(false)}
                         className="fixed inset-0 z-40 bg-stone-900/10 backdrop-blur-[1px]"
@@ -242,14 +239,14 @@ export default function Layout() {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className="absolute right-0 mt-3 w-52 bg-white rounded-[24px] shadow-2xl border border-stone-200 z-50 overflow-hidden py-2 px-2"
                       >
-                        <button 
+                        <button
                           onClick={() => { setShowPasswordModal(true); setIsAccountMenuOpen(false); }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-stone-600 hover:bg-stone-50 rounded-xl transition-colors font-black text-[10px] uppercase tracking-widest"
                         >
                           <Settings size={16} />
                           <span>Password</span>
                         </button>
-                        <button 
+                        <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors font-black text-[10px] uppercase tracking-widest border-t border-stone-50 mt-1"
                         >
@@ -283,12 +280,12 @@ export default function Layout() {
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                         className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50 p-2"
                       >
-                         <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-stone-600 hover:bg-stone-50 rounded-xl">
-                           <Key size={16} /> <span>Ganti Password</span>
-                         </button>
-                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl border-t border-stone-50 mt-1">
-                           <LogOut size={16} /> <span>Logout Sesi</span>
-                         </button>
+                        <button onClick={() => { setIsUserMenuOpen(false); setShowPasswordModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-stone-600 hover:bg-stone-50 rounded-xl">
+                          <Key size={16} /> <span>Ganti Password</span>
+                        </button>
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl border-t border-stone-50 mt-1">
+                          <LogOut size={16} /> <span>Logout Sesi</span>
+                        </button>
                       </motion.div>
                     </>
                   )}
@@ -305,50 +302,67 @@ export default function Layout() {
 
       {/* Mobile Bottom Tab Bar */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-stone-200 z-[60] flex items-center justify-around px-1 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-          {filteredNavItems.slice(0, 4).map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
-                  isActive ? 'text-emerald-600' : 'text-stone-400'
-                }`}
-              >
-                <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-50' : ''}`}>
-                  <Icon size={18} />
+        <nav className="fixed bottom-0 left-0 right-0 h-[68px] bg-white border-t border-stone-200 z-[60] flex items-center justify-between px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] rounded-t-2xl md:rounded-none">
+          {(() => {
+            const extraItem = user?.role === 'admin' 
+              ? { path: '/users', label: 'Users', icon: Users }
+              : { path: 'search', label: 'Cari', icon: Search, onClick: () => setSearchOpen(true) };
+            
+            const mobileItems = [...filteredNavItems.slice(0, 4), extraItem];
+
+            return mobileItems.map((item) => {
+              const isActive = item.path === 'search' ? false : location.pathname === item.path;
+              const Icon = item.icon;
+              
+              return (
+                <div key={item.path} className="flex-1 flex justify-center h-full relative">
+                  {item.path === 'search' ? (
+                    <button
+                      onClick={(item as any).onClick}
+                      className="flex flex-col items-center justify-center gap-1 w-full h-full pt-1 pb-2 text-stone-400 active:text-emerald-600 transition-all hover:text-stone-600"
+                    >
+                      <div className="p-1.5 rounded-xl transition-all active:bg-emerald-50 hover:bg-stone-50">
+                        <Icon size={22} strokeWidth={2} />
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-tighter leading-none">Cari</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`flex flex-col items-center justify-center w-full h-full transition-all ${
+                        isActive ? 'text-emerald-600' : 'text-stone-400'
+                      }`}
+                    >
+                      {isActive ? (
+                        <div className="flex flex-col items-center justify-center relative -top-[24px]">
+                          <motion.div
+                            layoutId="navBubble"
+                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                            className="w-[56px] h-[56px] bg-gradient-to-tr from-emerald-600 to-emerald-400 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 border-[4px] border-white relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 -translate-x-full animate-[shimmer_2.5s_infinite]"></div>
+                            <Icon size={24} strokeWidth={2.5} className="relative z-10" />
+                          </motion.div>
+                          <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tight mt-1 leading-none bg-white/50 px-2 py-0.5 rounded-full">
+                            {item.label === 'POS / Rental' ? 'POS' : item.label}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-1 pt-1 pb-2">
+                          <div className="p-1.5 rounded-xl transition-all hover:bg-stone-50">
+                            <Icon size={22} strokeWidth={2} />
+                          </div>
+                          <span className="text-[9px] font-bold uppercase tracking-tighter leading-none">
+                            {item.label === 'POS / Rental' ? 'POS' : item.label}
+                          </span>
+                        </div>
+                      )}
+                    </Link>
+                  )}
                 </div>
-                <span className="text-[8px] font-black uppercase tracking-tighter leading-none">
-                  {item.label === 'POS / Rental' ? 'POS' : item.label}
-                </span>
-              </Link>
-            );
-          })}
-          {user?.role === 'admin' ? (
-            <Link
-              to="/users"
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
-                location.pathname === '/users' ? 'text-emerald-600' : 'text-stone-400'
-              }`}
-            >
-              <div className={`p-1.5 rounded-xl transition-all ${location.pathname === '/users' ? 'bg-emerald-50' : ''}`}>
-                <Users size={18} />
-              </div>
-              <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Users</span>
-            </Link>
-          ) : (
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-stone-400 active:text-emerald-600 transition-all"
-            >
-              <div className="p-1.5 rounded-xl transition-all active:bg-emerald-50">
-                <Search size={18} />
-              </div>
-              <span className="text-[8px] font-black uppercase tracking-tighter leading-none">Cari</span>
-            </button>
-          )}
+              );
+            });
+          })()}
         </nav>
       )}
 

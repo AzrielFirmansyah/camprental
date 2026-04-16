@@ -16,7 +16,7 @@ export default function Inventory() {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 9;
   const [submitting, setSubmitting] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -76,7 +76,7 @@ export default function Inventory() {
   useEffect(() => {
     const itemId = localStorage.getItem('searchItemId');
     const itemName = localStorage.getItem('searchItemName');
-    
+
     if (itemId) {
       setSearchTerm(itemName || itemId);
       localStorage.removeItem('searchItemId');
@@ -104,7 +104,7 @@ export default function Inventory() {
         totalStock: formData.totalStock,
         categoryId: parseInt(formData.categoryId) || null
       };
-      
+
       if (editingItem) {
         if (imageFile) {
           const formDataPayload = new FormData();
@@ -307,7 +307,7 @@ export default function Inventory() {
             </button>
           )}
         </div>
-        
+
         <div className="bg-white p-2.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-stone-200">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -478,14 +478,14 @@ export default function Inventory() {
       {/* Improved Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-sm">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-sm md:max-w-md shadow-2xl overflow-hidden"
           >
             <div className="bg-emerald-600 p-5 md:p-6 relative">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
               >
@@ -503,7 +503,7 @@ export default function Inventory() {
                 </div>
               </div>
             </div>
-            
+
             <form onSubmit={handlePreSubmit} className="p-5 md:p-6 space-y-4">
               <div className="space-y-4">
                 {/* Image Upload Area */}
@@ -551,13 +551,13 @@ export default function Inventory() {
 
                 <div>
                   <label className="block text-[10px] font-black text-stone-500 uppercase mb-1.5 ml-1 tracking-widest">Nama Item</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={formData.name} 
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Contoh: Tenda 4 Orang"
-                    className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all" 
+                    className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
                 <div className="relative">
