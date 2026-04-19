@@ -71,7 +71,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 function NotificationToast({ notifications, removeNotification }: { notifications: Notification[], removeNotification: (id: string) => void }) {
   return (
-    <div className="fixed top-4 right-4 z-[100] space-y-2 max-w-sm w-full">
+    <div className="fixed top-3 md:top-4 right-3 md:right-4 z-[100] space-y-1.5 md:space-y-2 max-w-[calc(100vw-1.5rem)] md:max-w-sm w-full">
       <AnimatePresence>
         {notifications.slice(0, 5).map((notification, index) => (
           <NotificationItem key={notification.id} notification={notification} index={index} onClose={() => removeNotification(notification.id)} />
@@ -93,12 +93,14 @@ function NotificationItem({ notification, index, onClose }: { notification: Noti
   }, [onClose]);
 
   const getIcon = () => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const iconSize = isMobile ? 14 : 18;
     switch (notification.type) {
-      case 'stock_low': return <AlertTriangle className="text-amber-500" size={18} />;
-      case 'stock_update': return <Package className="text-blue-500" size={18} />;
-      case 'success': return <Package className="text-emerald-500" size={18} />;
-      case 'error': return <AlertTriangle className="text-red-500" size={18} />;
-      default: return <Bell className="text-stone-500" size={18} />;
+      case 'stock_low': return <AlertTriangle className="text-amber-500" size={iconSize} />;
+      case 'stock_update': return <Package className="text-blue-500" size={iconSize} />;
+      case 'success': return <Package className="text-emerald-500" size={iconSize} />;
+      case 'error': return <AlertTriangle className="text-red-500" size={iconSize} />;
+      default: return <Bell className="text-stone-500" size={iconSize} />;
     }
   };
 
@@ -112,23 +114,25 @@ function NotificationItem({ notification, index, onClose }: { notification: Noti
     }
   };
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 50, scale: 0.9 }}
       animate={{ opacity: isExiting ? 0 : 1, x: isExiting ? 50 : 0, scale: isExiting ? 0.9 : 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white rounded-xl shadow-lg border border-stone-200 border-l-4 ${getBorderColor()} overflow-hidden`}
+      className={`bg-white rounded-lg md:rounded-xl shadow-lg border border-stone-200 border-l-[3px] md:border-l-4 ${getBorderColor()} overflow-hidden`}
     >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
+      <div className="p-2.5 md:p-4">
+        <div className="flex items-start gap-2 md:gap-3">
           <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-stone-900">{notification.title}</p>
-            {notification.message && <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{notification.message}</p>}
+            <p className="text-[11px] md:text-sm font-black md:font-semibold text-stone-900 leading-tight">{notification.title}</p>
+            {notification.message && <p className="text-[10px] md:text-xs text-stone-500 mt-0.5 line-clamp-2 leading-tight">{notification.message}</p>}
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 p-1">
-            <X size={14} />
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 p-0.5">
+            <X size={isMobile ? 12 : 14} />
           </button>
         </div>
       </div>

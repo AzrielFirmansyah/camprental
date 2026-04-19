@@ -3,6 +3,7 @@ import { fetchApi, uploadImage } from '../lib/api';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Search, ChevronDown, Image as ImageIcon, X } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
+import { useNotifications } from '../components/NotificationContext';
 
 export default function Inventory() {
   const [items, setItems] = useState<any[]>([]);
@@ -16,7 +17,7 @@ export default function Inventory() {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 8;
   const [submitting, setSubmitting] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,6 +32,7 @@ export default function Inventory() {
   const [deleteImage, setDeleteImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -151,7 +153,7 @@ export default function Inventory() {
       loadData();
     } catch (error: any) {
       console.error('Failed to save item', error);
-      alert(error.message || 'Failed to save item. Please try again.');
+      addNotification('error', 'Gagal', error.message || 'Gagal menyimpan item.');
     } finally {
       setSubmitting(false);
     }
@@ -173,7 +175,7 @@ export default function Inventory() {
     } catch (error: any) {
       console.error('Failed to delete item', error);
       const msg = error.message || 'Failed to delete item. It may be in use in a transaction.';
-      alert(msg);
+      addNotification('error', 'Gagal Hapus', msg);
     } finally {
       setLoading(false);
     }
@@ -211,12 +213,12 @@ export default function Inventory() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB');
+        addNotification('warning', 'Ukuran File', 'Ukuran file harus kurang dari 10MB');
         return;
       }
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        alert('Only jpg, png, gif, and webp files are allowed');
+        addNotification('warning', 'Format File', 'Hanya file JPG, PNG, GIF, dan WEBP yang diizinkan');
         return;
       }
       setImageFile(file);
@@ -382,14 +384,14 @@ export default function Inventory() {
           ) : (
             /* Desktop: Table */
             <table className="min-w-full divide-y divide-stone-200 border-separate border-spacing-0">
-              <thead className="bg-stone-50 sticky top-0 z-10">
+              <thead className="bg-emerald-600 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Item Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Harga / Hari</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Stock (Avail/Total)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
-                  {isAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>}
+                  <th className="px-6 py-3 text-left text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-r border-emerald-500/20">Item Name</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-r border-emerald-500/20">Category</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-r border-emerald-500/20">Harga / Hari</th>
+                  <th className="px-6 py-3 text-center text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-r border-emerald-500/20">Stock (Avail/Total)</th>
+                  <th className="px-6 py-3 text-center text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-r border-emerald-500/20">Status</th>
+                  {isAdmin && <th className="px-6 py-3 text-right text-[14px] font-black text-emerald-50 uppercase tracking-widest border-b border-emerald-500/20">Actions</th>}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-stone-200">
@@ -405,39 +407,41 @@ export default function Inventory() {
                         key={item.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="hover:bg-stone-50"
+                        className="hover:bg-emerald-50/30 transition-colors"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-stone-900">{item.name}</div>
+                        <td className="px-6 py-4 whitespace-nowrap border-b border-r border-stone-100">
+                          <div className="text-sm font-bold text-stone-900 uppercase tracking-tight">{item.name}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-500">{item.categoryName}</div>
+                        <td className="px-6 py-4 whitespace-nowrap border-b border-r border-stone-100">
+                          <div className="text-[11px] font-black text-stone-400 uppercase tracking-widest">{item.categoryName}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap border-b border-r border-stone-100">
                           <div className="text-sm font-black text-emerald-600">{formatCurrency(item.dailyPrice)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <span className={`text-sm font-medium ${item.availableStock < 3 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <td className="px-6 py-4 whitespace-nowrap border-b border-r border-stone-100">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span className={`text-sm font-black ${item.availableStock < 3 ? 'text-red-600' : 'text-emerald-600'}`}>
                               {item.availableStock}
                             </span>
-                            <span className="text-sm text-stone-500 mx-1">/</span>
-                            <span className="text-sm text-stone-500">{item.totalStock}</span>
+                            <span className="text-xs text-stone-300 font-bold">/</span>
+                            <span className="text-sm text-stone-500 font-bold">{item.totalStock}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.colors}`}>
+                        <td className="px-6 py-4 whitespace-nowrap border-b border-r border-stone-100 text-center">
+                          <span className={`px-2.5 py-1 inline-flex text-[10px] leading-4 font-black rounded-lg uppercase tracking-wider ${status.colors}`}>
                             {status.text}
                           </span>
                         </td>
                         {isAdmin && (
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onClick={() => openModal(item)} className="text-blue-600 hover:text-blue-900 mr-4">
-                              <Edit size={18} />
-                            </button>
-                            <button onClick={() => confirmDelete(item.id)} className="text-red-600 hover:text-red-900">
-                              <Trash2 size={18} />
-                            </button>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-stone-100">
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => openModal(item)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                <Edit size={16} />
+                              </button>
+                              <button onClick={() => confirmDelete(item.id)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         )}
                       </motion.tr>
@@ -555,9 +559,9 @@ export default function Inventory() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Contoh: Tenda 4 Orang"
-                    className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-emerald-500 transition-all"
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
+                    placeholder="CONTOH: TENDA 4 ORANG"
+                    className="w-full border border-stone-100 bg-stone-50 rounded-xl py-2.5 px-3 text-sm font-black text-stone-700 focus:outline-none focus:border-emerald-500 transition-all uppercase placeholder:normal-case"
                   />
                 </div>
                 <div className="relative">

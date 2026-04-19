@@ -103,18 +103,18 @@ export default function Layout() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordForm.new !== passwordForm.confirm) return alert('Konfirmasi password baru tidak cocok');
+    if (passwordForm.new !== passwordForm.confirm) return addNotification('error', 'Gagal', 'Konfirmasi password baru tidak cocok');
     setSubmitting(true);
     try {
       await fetchApi('/auth/change-password', {
         method: 'PUT',
         body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new })
       });
-      alert('Password berhasil diperbarui!');
+      addNotification('success', 'Berhasil', 'Password berhasil diperbarui!');
       setShowPasswordModal(false);
       setPasswordForm({ current: '', new: '', confirm: '' });
     } catch (error: any) {
-      alert(error.message || 'Gagal mengganti password');
+      addNotification('error', 'Gagal', error.message || 'Gagal mengganti password');
     } finally {
       setSubmitting(false);
     }

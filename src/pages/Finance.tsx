@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, TrendingDown, TrendingUp, Plus, Calendar, FileText, ChevronDown, Download, CheckCircle2, Trash2, Eye, User, X } from 'lucide-react';
+import { useNotifications } from '../components/NotificationContext';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -30,6 +31,7 @@ export default function Finance() {
   const [currentIncomePage, setCurrentIncomePage] = useState(1);
   const [currentExpensePage, setCurrentExpensePage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const { addNotification } = useNotifications();
   const itemsPerPage = 8;
 
   const [filters, setFilters] = useState({
@@ -151,7 +153,7 @@ export default function Finance() {
       loadData();
     } catch (error) {
       console.error('Failed to add expense', error);
-      alert('Failed to add expense');
+      addNotification('error', 'Gagal', 'Gagal menambahkan biaya pengeluaran.');
     }
   };
 
@@ -169,7 +171,7 @@ export default function Finance() {
       setIsViewModalOpen(true);
     } catch (error) {
       console.error('Failed to load transaction details', error);
-      alert('Gagal mengambil data detail transaksi');
+      addNotification('error', 'Gagal', 'Gagal mengambil data detail transaksi');
     }
   };
 
@@ -188,7 +190,7 @@ export default function Finance() {
       loadData();
     } catch (error) {
       console.error('Failed to return items', error);
-      alert('Failed to return items');
+      addNotification('error', 'Gagal', 'Gagal memproses pengembalian barang.');
     } finally {
       setSubmitting(false);
     }
@@ -209,7 +211,7 @@ export default function Finance() {
       loadData();
     } catch (error) {
       console.error('Failed to delete expense', error);
-      alert('Gagal menghapus pengeluaran');
+      addNotification('error', 'Gagal', 'Gagal menghapus data pengeluaran.');
     } finally {
       setSubmitting(false);
     }

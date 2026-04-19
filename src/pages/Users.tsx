@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Search, UserPlus, Users as UsersIcon, Mail, Shield, Key, X } from 'lucide-react';
+import { useNotifications } from '../components/NotificationContext';
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export default function Users() {
     password: '',
     role: 'staff'
   });
+  const { addNotification } = useNotifications();
 
   const loadData = async () => {
     try {
@@ -49,7 +51,7 @@ export default function Users() {
       setIsModalOpen(false);
       loadData();
     } catch (error: any) {
-      alert(error.message || 'Gagal menyimpan user');
+      addNotification('error', 'Gagal', error.message || 'Gagal menyimpan user');
     }
   };
 
@@ -59,7 +61,7 @@ export default function Users() {
       await fetchApi(`/users/${id}`, { method: 'DELETE' });
       loadData();
     } catch (error) {
-      alert('Gagal menghapus user');
+      addNotification('error', 'Gagal', 'Gagal menghapus user');
     }
   };
 

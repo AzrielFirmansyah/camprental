@@ -116,10 +116,22 @@ export default function Dashboard() {
       return;
     }
 
-    // Format tanggal
+    const dueDate = startOfDay(new Date(tx.endDate));
+    const today = startOfDay(new Date());
+    const daysLate = differenceInDays(today, dueDate);
     const endDateFormatted = tx.endDate ? format(new Date(tx.endDate), 'dd MMM yyyy') : '-';
 
-    const message = `Halo Kak ${tx.customerName},%0A%0AMengingatkan bahwa masa sewa alat camping di *Sewa Outdoor Sameton Tulangan Sidoarjo* akan berakhir pada tanggal *${endDateFormatted}*.%0A%0AMohon untuk mengembalikan barang sebelum jam 8 malam ya Kak. Apabila barang dikembalikan terlambat atau dalam keadaan kotor/rusak, maka akan dikenakan denda sesuai dengan ketentuan di awal.%0A%0ATerima kasih banyak atas kerjasamanya! 🙏`;
+    let message = '';
+    
+    if (daysLate > 0) {
+      // Late message
+      const dailyRate = Math.round(tx.totalAmount / tx.durationDays);
+      const estimatedFine = dailyRate * daysLate;
+      message = `Halo Kak ${tx.customerName},%0A%0AKami dari *Sewa Outdoor Sameton Tulangan Sidoarjo* ingin memberitahukan bahwa masa sewa alat camping Kakak telah *MELEWATI BATAS WAKTU* selama *${daysLate} HARI*. (Jatuh tempo: ${endDateFormatted})%0A%0AMohon segera mengembalikan alat tersebut ke store kami. Sesuai kesepakatan awal, terdapat denda keterlambatan sebesar:*%0A*Rp ${estimatedFine.toLocaleString('id-ID')}* (${daysLate} hari x ${dailyRate.toLocaleString('id-ID')}/hari)%0A%0ATerima kasih atas kerjasamanya. 🙏`;
+    } else {
+      // Normal reminder
+      message = `Halo Kak ${tx.customerName},%0A%0AMengingatkan bahwa masa sewa alat camping di *Sewa Outdoor Sameton Tulangan Sidoarjo* akan berakhir pada tanggal *${endDateFormatted}*.%0A%0AMohon untuk mengembalikan barang sebelum jam 8 malam ya Kak. Apabila barang dikembalikan terlambat atau dalam keadaan kotor/rusak, maka akan dikenakan denda sesuai dengan ketentuan di awal.%0A%0ATerima kasih banyak atas kerjasamanya! 🙏`;
+    }
 
     let phone = tx.customerPhone;
     if (phone.startsWith('0')) {

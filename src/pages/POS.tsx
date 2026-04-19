@@ -291,6 +291,21 @@ export default function POS() {
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
+  const handleSendLateReminderWA = (tx: any) => {
+    const daysLate = Math.abs(differenceInDays(new Date(tx.endDate), new Date()));
+    const dailyRate = Math.round(tx.totalAmount / tx.durationDays);
+    const estimatedFine = dailyRate * daysLate;
+    
+    const itemsText = tx.items ? tx.items.map((i: any) => `- ${i.itemName || i.name} (x${i.quantity})`).join('%0A') : '';
+    
+    const message = `Halo Kak ${tx.customerName},%0A%0AKami dari *Sewa Outdoor Sameton Tulangan Sidoarjo* ingin memberitahukan bahwa masa sewa alat camping Kakak telah *MELEWATI BATAS WAKTU* selama *${daysLate} HARI*. (Jatuh tempo: ${format(new Date(tx.endDate), 'dd MMM yyyy')})%0A%0AMohon segera mengembalikan alat tersebut ke store kami. Sesuai kesepakatan awal, terdapat denda keterlambatan sebesar:*%0A*Rp ${estimatedFine.toLocaleString('id-ID')}* (${daysLate} hari x ${dailyRate.toLocaleString('id-ID')}/hari)%0A%0A*Rincian Item:*%0A${itemsText}%0A%0ATerima kasih atas kerjasamanya. 🙏`;
+    
+    let phone = tx.customerPhone;
+    if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+    phone = phone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+  };
+
   return (
     <div className="flex flex-col h-auto lg:h-full gap-4">
       {/* Tab Switcher */}
@@ -554,13 +569,30 @@ export default function POS() {
                           <div className="flex items-center gap-2"><Clock size={12} /> {format(new Date(tx.startDate), 'dd MMM')} - {format(new Date(tx.endDate), 'dd MMM')}</div>
                           <div className="flex items-center gap-2"><ShieldCheck size={12} /> Jaminan: {tx.guarantee || '-'}</div>
                           <div className="flex items-center gap-2 font-black text-stone-800"><Wallet size={12} /> Total: {formatCurrency(tx.totalAmount)}</div>
+                          {daysLeft < 0 && (
+                            <div className="flex items-center gap-2 font-black text-red-600 bg-red-50 p-2 rounded-lg mt-1 border border-red-100">
+                              <AlertCircle size={12} /> 
+                              Est. Denda: {formatCurrency(Math.round(tx.totalAmount / tx.durationDays) * Math.abs(daysLeft))}
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handleReturnAction(tx)}
-                          className="w-full py-3 bg-white border border-stone-200 text-orange-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm active:scale-95"
-                        >
-                          Proses Kembali
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleReturnAction(tx)}
+                            className="flex-1 py-3 bg-white border border-stone-200 text-orange-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm active:scale-95"
+                          >
+                            Proses Kembali
+                          </button>
+                          {daysLeft < 0 && (
+                            <button
+                              onClick={() => handleSendLateReminderWA(tx)}
+                              className="px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                              title="Kirim Pengingat WA"
+                            >
+                              <MessageCircle size={18} />
+                            </button>
+                          )}
+                        </div>
                       </motion.div>
                     );
                   })

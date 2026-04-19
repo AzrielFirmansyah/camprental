@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, Search, Database, List, Tag, Percent, CreditCard, FileText } from 'lucide-react';
+import { useNotifications } from '../components/NotificationContext';
 
 // ✅ Fix 1: Tambah 'txstatuses' dan 'payments' ke union type, hapus duplikat 'statuses'
 type ActiveTab = 'categories' | 'statuses' | 'discounts' | 'payments' | 'txstatuses';
@@ -17,6 +18,7 @@ export default function Master() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   // ✅ Fix 2: Tambah 'txstatus' ke union type delete
   const [itemToDelete, setItemToDelete] = useState<{ id: number, type: 'category' | 'status' | 'discount' | 'payment' | 'txstatus' } | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -26,6 +28,7 @@ export default function Master() {
     description: '',
     percentage: 0
   });
+  const { addNotification } = useNotifications();
 
   const [currentCatPage, setCurrentCatPage] = useState(1);
   const [currentStatusPage, setCurrentStatusPage] = useState(1);
@@ -63,7 +66,7 @@ export default function Master() {
   useEffect(() => {
     const categoryId = localStorage.getItem('searchCategoryId');
     const categoryName = localStorage.getItem('searchCategoryName');
-    
+
     if (categoryId) {
       setSearchTerm(categoryName || categoryId);
       setActiveTab('categories');
@@ -116,7 +119,7 @@ export default function Master() {
     } catch (error: any) {
       console.error(`Failed to save ${activeTab}`, error);
       const msg = error.message || 'Error tidak diketahui';
-      alert(`Gagal menyimpan ${activeTab}: ${msg}`);
+      addNotification('error', 'Gagal', `Gagal menyimpan ${activeTab}: ${msg}`);
     }
   };
 
@@ -144,7 +147,7 @@ export default function Master() {
       loadData();
     } catch (error: any) {
       console.error(`Failed to delete ${type}`, error);
-      alert(error.message || `Failed to delete ${type}. It might be in use.`);
+      addNotification('error', 'Gagal Hapus', error.message || `Gagal menghapus ${type}.`);
       setDeleteModalOpen(false);
     }
   };
